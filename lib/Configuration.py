@@ -173,7 +173,12 @@ class Function(object):
         commandlist =list()
         if route_type == "ip":
             if route_mode == "network":
-                commandlist.append("config route ip network %s %s"%(route_ip, route_netmask))
+                if gateway != "":
+                    commandlist.append("config route ip network %s netmask %s gateway %s"%(route_ip, route_netmask, gateway))
+                elif interface != "":
+                    commandlist.append("config route ip network %s netmask %s interface %s" % (route_ip, route_netmask, interface))
+                else:
+                    commandlist.append("config route ip network %s %s"%(route_ip, route_netmask))
             else:
                 if interface != "":
                     commandlist.append("config route ip default gateway %s interface %s metric %s"%(gateway, interface, metric))
@@ -184,7 +189,6 @@ class Function(object):
             if route_mode == "network":
                 commandlist.append("config route table %s ip network %s %s"%(table_index, route_ip, route_netmask))
             else:
-                print "enter"
                 commandlist.append("config route table %s ip default interface %s"%(table_index, default_interface))
 
         return commandlist
