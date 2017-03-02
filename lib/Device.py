@@ -148,8 +148,6 @@ class Device_Tool(object):
         for config in configlist:
             if config not in runningconfig:
                 self.device_send_command(config)
-            else:
-                print "no config need to be set"
 
     def device_set_no_config(self,configlist):
         runningconfig = self.device_get_running_config()
