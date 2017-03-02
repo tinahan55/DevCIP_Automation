@@ -240,16 +240,16 @@ if __name__ == '__main__':
     image_server = "10.2.10.17"
     imaage_version = '3.3'
     image_mode = 'Target'
-    image_build_no ="62"
-    deviceip = '10.2.11.58'
-    deviceport = 2041
-    device_connect_type = "telnet"
+    image_build_no ="63"
+    deviceip = '10.2.52.53'
+    deviceport = 22
+    device_connect_type = "ssh"
     username ="admin"
     password ="admin"
 
     item = list()
     maintain_interface ="maintenance 0"
-    maintain_ip= '10.2.11.250'
+    maintain_ip= '10.2.52.53'
     maintain_netmask ='255.255.252.0'
     maintaince_ip_mode ="static"
     imagetool =ImageTool(deviceip,deviceport,device_connect_type,username,password)
