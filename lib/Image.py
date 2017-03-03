@@ -253,10 +253,15 @@ if __name__ == '__main__':
         image_build_no =image_info[2]
         device_connect_type = device_info[0]
         device_ip = device_info[1]
-        device_port = device_info[2]
+        device_port = int(device_info[2])
         username =login_info[0]
         password =login_info[1]
         maintain_interface =maintain_info[0]
+        if "eth" not in maintain_interface:
+            maintain_interface = "maintenance 0"
+        else:
+            maintain_interface = maintain_interface.replace("eth","eth ")
+
         maintaince_ip_mode =maintain_info[1]
         maintain_ip= maintain_info[2]
         maintain_netmask =maintain_info[3]
