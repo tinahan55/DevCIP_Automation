@@ -6,6 +6,7 @@ import logging
 from Device import *
 from Tool import Log
 import time
+import sys
 from time import gmtime, strftime
 
 class ImageInfo(object):
@@ -237,24 +238,34 @@ class ImageTool(object):
 
 if __name__ == '__main__':
     mainlogger = Log("Image_Tool","Image_Tool")
-    image_server = "10.2.10.17"
-    imaage_version = '3.3'
-    image_mode = 'Target'
-    image_build_no ="63"
-    deviceip = '10.2.52.53'
-    deviceport = 22
-    device_connect_type = "ssh"
-    username ="admin"
-    password ="admin"
+    if len(sys.argv)>5:
 
-    item = list()
-    maintain_interface ="maintenance 0"
-    maintain_ip= '10.2.52.53'
-    maintain_netmask ='255.255.252.0'
-    maintaince_ip_mode ="static"
-    imagetool =ImageTool(deviceip,deviceport,device_connect_type,username,password)
-    imagetool.set_image_host(image_server,imaage_version,image_mode,image_build_no)
-    imagetool.upgrade_device_image(maintain_interface,maintaince_ip_mode,maintain_ip,maintain_netmask)
+        mainlogger.write("info",sys.argv)
+
+        ## initial paramter
+        image_server = sys.argv[1]
+        image_info =sys.argv[2].split("_")
+        device_info = sys.argv[3].split("_")
+        login_info = sys.argv[4].split("_")
+        maintain_info = sys.argv[5].split("_")
+        image_version = image_info[0]
+        image_mode = image_info[1]
+        image_build_no =image_info[2]
+        device_connect_type = device_info[0]
+        device_ip = device_info[1]
+        device_port = device_info[2]
+        username =login_info[0]
+        password =login_info[1]
+        maintain_interface =maintain_info[0]
+        maintaince_ip_mode =maintain_info[1]
+        maintain_ip= maintain_info[2]
+        maintain_netmask =maintain_info[3]
+
+
+        ## running image update
+        imagetool =ImageTool(device_ip,device_port,device_connect_type,username,password)
+        imagetool.set_image_host(image_server,image_version,image_mode,image_build_no)
+        imagetool.upgrade_device_image(maintain_interface,maintaince_ip_mode,maintain_ip,maintain_netmask)
 
 
 
