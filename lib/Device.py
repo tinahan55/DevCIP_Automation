@@ -161,7 +161,7 @@ class Device_Tool(object):
             time.sleep(60)
             self.target = self.device_connect()
             timer_item = 0
-            while self.target is None and timer_item<20:
+            while self.target is None and timer_item<30:
                 time.sleep(10)
                 timer_item+=1
                 self.target = self.device_connect()

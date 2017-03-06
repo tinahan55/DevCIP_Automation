@@ -152,7 +152,6 @@ class SSHConnect(object):
            p = re.compile(pattern)
            match = p.search(text)
            if (match == None):
-               print "pattern : %s , text: %s"%(pattern,text)
                return False
            else:
                return True

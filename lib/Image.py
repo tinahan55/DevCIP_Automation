@@ -106,7 +106,7 @@ class ImageTool(object):
             imageinfo.get_target_image(self.device.device_type,build_no)
         else:
             imageinfo.get_last_image(self.device.device_type)
-        print imageinfo.image_name
+        print "[ImageTool][set_image_host]Update Image :%s"%(imageinfo.image_name)
         self.update_build_image = "LileeOS_%s_%s"%(image_version,imageinfo.image_build_no)
         self.update_image_url_path =imageinfo.image_url_path
 
@@ -129,25 +129,25 @@ class ImageTool(object):
         Check_Command = "show boot system-image"
         Check_Build = "Running: %s"%(build_version)
         result = self.device.device_send_command_match(Check_Command,10,Check_Build)
-        self.logger.info("check_device_image Running: %s"%(result))
+        self.logger.info("check_device_image Running (%s) :%s (response)%s"%(Check_Build,result,self.device.target_response))
 
         if result == True:
             IF_Udate = False
         else:
             Check_Build = "Alternative image: %s"%(build_version)
             result = self.device.device_send_command_match(Check_Command,10,Check_Build)
-            self.logger.info("check_rack_image Alternative: %s"%(result))
+            self.logger.info("check_rack_image Alternative (%s):%s (response)%s"%(Check_Build,result,self.device.target_response))
             if result == True:
                 cmdresult = self.device.device_send_command("config boot system-image " + build_version)
-                self.logger.info("check config boot system-image: %s"%(cmdresult))
+                self.logger.info("check config boot system-image %s : %s"%(build_version,cmdresult))
                 if cmdresult == True:
                         rebootresult = self.device.device_reboot()
-                        self.logger.info("check rebootresult: %s"%(rebootresult))
+                        self.logger.info("check reboot result: %s"%(rebootresult))
                         if rebootresult == True:
                             self.logger.info('[Upgrade_Rack_Fw] login success to check rack running images')
                             Check_Build = "Running: %s"%(build_version)
                             result = self.device.device_send_command_match(Check_Command,10,Check_Build)
-                            self.logger.info("check check_rack_image Running: %s"%(result))
+                            self.logger.info("check_device_image Running (%s) :%s"%(Check_Build,result))
                             if result == True:
                                 IF_Udate = False
             else:
@@ -223,7 +223,11 @@ class ImageTool(object):
                                 if pingresult ==True:
                                     self.logger.info("[upgrade_device_image]The image is the oldest one ,need to upgrade")
                                     upgraderesult = self._upgrade(self.update_image_url_path,self.update_build_image)
-                                    self.logger.info("[upgrade_device_image]upgrade result:%s"%(upgraderesult))
+                                    if upgraderesult:
+                                        self.logger.info("[upgrade_device_image]upgrade %s result: Finish"%(self.update_image_url_path))
+                                    else:
+                                        self.logger.info("[upgrade_device_image]upgrade %s result: Finish"%(self.update_image_url_path))
+
                                 else:
                                     self.logger.info('[upgrade_device_image][after rebooting]network had fail.')
 
@@ -239,9 +243,6 @@ class ImageTool(object):
 if __name__ == '__main__':
     mainlogger = Log("Image_Tool","Image_Tool")
     if len(sys.argv)>5:
-
-        mainlogger.write("info",sys.argv)
-
         ## initial paramter
         image_server = sys.argv[1]
         image_info =sys.argv[2].split("_")
@@ -269,7 +270,11 @@ if __name__ == '__main__':
 
         ## running image update
         imagetool =ImageTool(device_ip,device_port,device_connect_type,username,password)
+
+        ## get image download url
         imagetool.set_image_host(image_server,image_version,image_mode,image_build_no)
+
+        ## Start to update image
         imagetool.upgrade_device_image(maintain_interface,maintaince_ip_mode,maintain_ip,maintain_netmask)
 
 
