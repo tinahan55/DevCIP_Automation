@@ -79,7 +79,7 @@ class TestRailAPI(object):
         url ='add_result/%s'%(test_id)
         data ={"status_id":status_id,"version":build_version,"comment":comment,"elapsed":"","defects":""}
         result = self.client.send_post(url,data)
-        if "200" in result:
+        if result["test_id"]== test_id:
             return True
         else:
             return False
@@ -103,20 +103,22 @@ class TestRailAPI(object):
                 try:
                     self.logger.info("[update_result]not result for this build")
                     add_result =  self.__add_result_for_test(test_id,status_id,buildversion,comment)
-                    if (add_result):
-                        self.logger.info("[[update_result] result: Completed.")
+                    self.logger.info("[update_result] result: %s"%(add_result))
+                    return  add_result
+
                 except Exception,ex:
                     self.logger.error("[add result] result: Fail:(%s)"%(str(ex)))
+                    return False
             else:
                 if ifwriteable == True:
                     self.logger.info("[update_result]update result for this build again.")
                     add_result =  self.__add_result_for_test(test_id,status_id,buildversion,comment)
-                    if (add_result):
-                        self.logger.info("[update_result] result: Completed.")
-                    self.logger.info("[update_result] result had been existed, not need to upload:%s"%(str(len(filter_result))))
+                    self.logger.info("[update_result] result: %s"%(add_result))
+                    return  add_result
 
         except Exception,ex:
             self.logger.error("[update_result] result: Fail:(%s)"%(str(ex)))
+            return False
 
 
     def update_test_result(self,project_name,test_plan,test_run,device_type,case_id,build_version,result,comment,ifwriteable):
@@ -144,9 +146,8 @@ class TestRailAPI(object):
                             case_id = test[0]["case_id"]
                             test_id = test[0]["id"]
                             print "%s,%s"%(case_id,test_id)
-                            #update_result = self.__update_result(test_id,status_id,build_version,comment,ifwriteable)
-
-            #self.logger.info("[update_test_result] result : %s"%(update_result))
+                            update_result = self.__update_result(test_id,status_id,build_version,comment,ifwriteable)
+                            self.logger.info("[update_test_result] result : %s"%(update_result))
 
 
             return update_result
@@ -156,11 +157,12 @@ class TestRailAPI(object):
 
 if __name__ == '__main__':
     mainlogger = Log("TestrailLog","main")
-    project_name ="LileeOS"
-    test_plan = "LileeOS 3.3.2 Auto Regression Test"
-    test_run = "Switch"
-    device_type = "DTS"
-    test_id = 6904
+    project_name ="ATS_Test"
+    test_plan = "test1"
+    test_run = "PreTesting"
+    comment = "Auto result upload"
+    device_type = "STS"
+    test_id = 11907
     buildversion = "3.3_build60"
     result ="Passed"
     comment = "Auto test passed"
