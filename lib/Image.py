@@ -55,7 +55,7 @@ class ImageInfo(object):
         for image in device_image_list:
             if target_build_no in image:
                 self.image_name = image
-                self.image_url_path = u"http://%s/weekly/v%s/%s"%(self.hostip,self.version,self.image_name)
+                self.image_url_path = "http://%s/weekly/v%s/%s"%(self.hostip,self.version,self.image_name)
                 self.image_build_no = image.split("_")[-1].replace(".img","")
 
         return self.image_name
@@ -65,7 +65,7 @@ class ImageInfo(object):
         device_image_list = [a for a in self.imagelist if device_type.lower() in a and 'vm' not in a]
         if len(device_image_list)>0:
             self.image_name = device_image_list[0]
-            self.image_url_path = u"http://%s/weekly/v%s/%s"%(self.hostip,self.version,self.image_name)
+            self.image_url_path = "http://%s/weekly/v%s/%s"%(self.hostip,self.version,self.image_name)
             self.image_build_no =  self.image_name.split("_")[-1].replace(".img","")
 
         else:
@@ -158,7 +158,7 @@ class ImageTool(object):
     def _upgrade(self,pathFW,update_build_image):
 
         self.logger.info("[%s]udate devicet starting.."%(self.device.device_type))
-        updatecmd = u"update boot system-image %s"%(pathFW)
+        updatecmd = "update boot system-image %s"%(pathFW)
         result = False
         download_match = "download"
         if "LMC" not in self.device.device_product_name:
