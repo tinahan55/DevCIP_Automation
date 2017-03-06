@@ -6,6 +6,7 @@ import logging
 from Device import *
 from Tool import Log
 import time
+import sys
 from time import gmtime, strftime
 
 class ImageInfo(object):
@@ -54,7 +55,7 @@ class ImageInfo(object):
         for image in device_image_list:
             if target_build_no in image:
                 self.image_name = image
-                self.image_url_path = u"http://%s/weekly/v%s/%s"%(self.hostip,self.version,self.image_name)
+                self.image_url_path = "http://%s/weekly/v%s/%s"%(self.hostip,self.version,self.image_name)
                 self.image_build_no = image.split("_")[-1].replace(".img","")
 
         return self.image_name
@@ -64,7 +65,7 @@ class ImageInfo(object):
         device_image_list = [a for a in self.imagelist if device_type.lower() in a and 'vm' not in a]
         if len(device_image_list)>0:
             self.image_name = device_image_list[0]
-            self.image_url_path = u"http://%s/weekly/v%s/%s"%(self.hostip,self.version,self.image_name)
+            self.image_url_path = "http://%s/weekly/v%s/%s"%(self.hostip,self.version,self.image_name)
             self.image_build_no =  self.image_name.split("_")[-1].replace(".img","")
 
         else:
@@ -105,7 +106,7 @@ class ImageTool(object):
             imageinfo.get_target_image(self.device.device_type,build_no)
         else:
             imageinfo.get_last_image(self.device.device_type)
-        print imageinfo.image_name
+        print "[ImageTool][set_image_host]Update Image :%s"%(imageinfo.image_name)
         self.update_build_image = "LileeOS_%s_%s"%(image_version,imageinfo.image_build_no)
         self.update_image_url_path =imageinfo.image_url_path
 
@@ -128,25 +129,25 @@ class ImageTool(object):
         Check_Command = "show boot system-image"
         Check_Build = "Running: %s"%(build_version)
         result = self.device.device_send_command_match(Check_Command,10,Check_Build)
-        self.logger.info("check_device_image Running: %s"%(result))
+        self.logger.info("check_device_image Running (%s) :%s (response)%s"%(Check_Build,result,self.device.target_response))
 
         if result == True:
             IF_Udate = False
         else:
             Check_Build = "Alternative image: %s"%(build_version)
             result = self.device.device_send_command_match(Check_Command,10,Check_Build)
-            self.logger.info("check_rack_image Alternative: %s"%(result))
+            self.logger.info("check_rack_image Alternative (%s):%s (response)%s"%(Check_Build,result,self.device.target_response))
             if result == True:
                 cmdresult = self.device.device_send_command("config boot system-image " + build_version)
-                self.logger.info("check config boot system-image: %s"%(cmdresult))
+                self.logger.info("check config boot system-image %s : %s"%(build_version,cmdresult))
                 if cmdresult == True:
                         rebootresult = self.device.device_reboot()
-                        self.logger.info("check rebootresult: %s"%(rebootresult))
+                        self.logger.info("check reboot result: %s"%(rebootresult))
                         if rebootresult == True:
                             self.logger.info('[Upgrade_Rack_Fw] login success to check rack running images')
                             Check_Build = "Running: %s"%(build_version)
                             result = self.device.device_send_command_match(Check_Command,10,Check_Build)
-                            self.logger.info("check check_rack_image Running: %s"%(result))
+                            self.logger.info("check_device_image Running (%s) :%s"%(Check_Build,result))
                             if result == True:
                                 IF_Udate = False
             else:
@@ -157,7 +158,7 @@ class ImageTool(object):
     def _upgrade(self,pathFW,update_build_image):
 
         self.logger.info("[%s]udate devicet starting.."%(self.device.device_type))
-        updatecmd = u"update boot system-image %s"%(pathFW)
+        updatecmd = "update boot system-image %s"%(pathFW)
         result = False
         download_match = "download"
         if "LMC" not in self.device.device_product_name:
@@ -222,7 +223,11 @@ class ImageTool(object):
                                 if pingresult ==True:
                                     self.logger.info("[upgrade_device_image]The image is the oldest one ,need to upgrade")
                                     upgraderesult = self._upgrade(self.update_image_url_path,self.update_build_image)
-                                    self.logger.info("[upgrade_device_image]upgrade result:%s"%(upgraderesult))
+                                    if upgraderesult:
+                                        self.logger.info("[upgrade_device_image]upgrade %s result: Finish"%(self.update_image_url_path))
+                                    else:
+                                        self.logger.info("[upgrade_device_image]upgrade %s result: Finish"%(self.update_image_url_path))
+
                                 else:
                                     self.logger.info('[upgrade_device_image][after rebooting]network had fail.')
 
@@ -237,24 +242,40 @@ class ImageTool(object):
 
 if __name__ == '__main__':
     mainlogger = Log("Image_Tool","Image_Tool")
-    image_server = "10.2.10.17"
-    imaage_version = '3.3'
-    image_mode = 'Target'
-    image_build_no ="62"
-    deviceip = '10.2.11.58'
-    deviceport = 2041
-    device_connect_type = "telnet"
-    username ="admin"
-    password ="admin"
+    if len(sys.argv)>5:
+        ## initial paramter
+        image_server = sys.argv[1]
+        image_info =sys.argv[2].split("_")
+        device_info = sys.argv[3].split("_")
+        login_info = sys.argv[4].split("_")
+        maintain_info = sys.argv[5].split("_")
+        image_version = image_info[0]
+        image_mode = image_info[1]
+        image_build_no =image_info[2]
+        device_connect_type = device_info[0]
+        device_ip = device_info[1]
+        device_port = int(device_info[2])
+        username =login_info[0]
+        password =login_info[1]
+        maintain_interface =maintain_info[0]
+        if "eth" not in maintain_interface:
+            maintain_interface = "maintenance 0"
+        else:
+            maintain_interface = maintain_interface.replace("eth","eth ")
 
-    item = list()
-    maintain_interface ="maintenance 0"
-    maintain_ip= '10.2.11.250'
-    maintain_netmask ='255.255.252.0'
-    maintaince_ip_mode ="static"
-    imagetool =ImageTool(deviceip,deviceport,device_connect_type,username,password)
-    imagetool.set_image_host(image_server,imaage_version,image_mode,image_build_no)
-    imagetool.upgrade_device_image(maintain_interface,maintaince_ip_mode,maintain_ip,maintain_netmask)
+        maintaince_ip_mode =maintain_info[1]
+        maintain_ip= maintain_info[2]
+        maintain_netmask =maintain_info[3]
+
+
+        ## running image update
+        imagetool =ImageTool(device_ip,device_port,device_connect_type,username,password)
+
+        ## get image download url
+        imagetool.set_image_host(image_server,image_version,image_mode,image_build_no)
+
+        ## Start to update image
+        imagetool.upgrade_device_image(maintain_interface,maintaince_ip_mode,maintain_ip,maintain_netmask)
 
 
 
