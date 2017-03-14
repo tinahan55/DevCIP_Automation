@@ -25,7 +25,7 @@ def set_log(filename,loggername):
 def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     title = "[%s][%s]"%(checkitem,checkcommand)
     logger.info("%s starting"%(title))
-    checkresult = device.device_send_command_match(checkcommand,5,checkmatch)
+    checkresult = device.device_send_command_match(checkcommand,10,checkmatch)
     logger.info("%s check %s result :%s"%(title,checkmatch,checkresult))
     if checkresult== False:
         logger.info("%s check %s error :%s"%(title,checkmatch,device.target_response))
@@ -35,7 +35,7 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
 if __name__ == '__main__':
     logfilename = "CheckList%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"check_list")
-    ip ="10.2.52.53"
+    ip ="10.2.52.54"
     port = 22
     mode ="ssh"
     username = "admin"
@@ -47,13 +47,11 @@ if __name__ == '__main__':
         logger.info("Device recovery image:%s"%(device.boot_image))
         logger.info("Device build image:%s"%(device.build_image))
         logger.info("Disable App Engine to wait 30 seconds")
-
-        device.device_send_command("config app-engine 0 enable")
-        time.sleep(30)
+        device.device_send_command("update terminal paging disable")
         device.device_send_command("config app-engine 0 disable")
         time.sleep(30)
 
-
+        '''
         checkitem = "device_check_cellular"
         checkcommandlist = ["slotmapping -l","slotmapping -l","show line cellular all"]
         checkitemlist = ["usb1","usb2","cellular (.*) 0"]
@@ -70,7 +68,7 @@ if __name__ == '__main__':
         for index,value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]
             device_check_info(logger,device,checkitem,value,checkmatch)
-
+        '''
 
         checkitem ="check_service_status"
         checkcommandlist = ["show service all","show service all","show service all","show service all"]
