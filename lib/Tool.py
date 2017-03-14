@@ -59,6 +59,13 @@ class Log(object):
         elif type =="error":
             self.logger.error(log_text)
 
+    def info(self,log_text):
+        self.logger.info(log_text)
 
 
+    def debug(self,log_text):
+        self.logger.debug(log_text)
+
+    def error(self,log_text):
+        self.logger.error(log_text)
 
