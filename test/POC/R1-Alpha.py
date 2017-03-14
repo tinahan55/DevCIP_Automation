@@ -16,12 +16,12 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
 def Checking_PoE(device):
     checkitem ="Checking_PoE"
     device.device_send_command("show poe budget")
-    vlan1_ip = "10.99.1.1"
-    Meraki_ip = "10.99.1.110"
-    logger.info("[%s]Starting- Ping IP CAM"%(checkitem))
+    vlan1000_ip = "172.99.1.1"
+    Meraki_ip = "172.99.1.106"
+    logger.info("[%s]Starting- Ping Meraki"%(checkitem))
     #device.device_send_command("config app-engine 0 disable")
     #time.sleep(30)
-    checkcommandlist = ["show poe port 0","ping -c 10 -S %s %s"%(vlan1_ip,Meraki_ip)]
+    checkcommandlist = ["show poe port 0","ping -c 10 -S %s %s"%(vlan1000_ip,Meraki_ip)]
     checkitemlist = ["15.4","64 bytes from %s: icmp_seq=10 (.*)"%(Meraki_ip)]
     for index,value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
@@ -77,17 +77,33 @@ def Checking_Tunnel(device):
                         logger.info("[%s]%s check %s error :%s" % (k, commandstatus, commanditem, device.target_response))
 
 def Checking_Vlan(device):
-    vlan1_index = 1
-    vlan50_index = 50
+    vlan1_index = 1000
+    vlan50_index = 500
     checkitem ="Checking_Vlan"
-    Vlan1_ip="10.99.1.1"
-    Vlan50_ip = "10.116.1.1 "
+    Vlan1_ip="172.99.1.1"
+    Vlan50_ip = "172.116.1.1 "
 
     logger.info("[%s]Starting- Ping Interface"%(checkitem))
     #device.device_send_command("config app-engine 0 disable")
     #time.sleep(30)
     checkcommandlist = ["show interface all","ping -S %s -c5 8.8.8.8"%(Vlan1_ip),"ping -S %s -c5 8.8.8.8"%(Vlan50_ip)]
     checkitemlist = ["vlan %s (.*) up | vlan %s (.*) up"%(vlan1_index,vlan50_index) ,"64 bytes from 8.8.8.8: icmp_seq=5 (.*)","64 bytes from 8.8.8.8: icmp_seq=5 (.*)"]
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
+        time.sleep(5)
+
+def Checking_GPS(device):
+    GPS_index = "/dev/ttyUSB1"
+
+    checkitem ="Checking_GPS"
+    #device.device_send_command("Show PoE budget")
+
+    logger.info("[%s] Starting- Checking_GPS"%(checkitem))
+    #device.device_send_command("config app-engine 0 disable")
+    #time.sleep(30)
+    checkcommandlist = ["slotmapping -l","cat %s"%(GPS_index),"show gps detail"]
+    checkitemlist = ["GPS(.*)ttyUSB1","GSV,|GGA,|GGA,|RMC,|VTG,","3D|25|121"]
     for index,value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
         device_check_info(logger,device,checkitem,value,checkmatch)
@@ -132,6 +148,25 @@ def set_log(filename,loggername):
     logger.addHandler(console)
     return logger
 
+def Checking_WDU_Vlan(device):
+    vlan2_index = 2
+    vlan5_index = 5
+    #checkitem = "Checking_WDU_Vlan"
+    WDU_vlan20_ip = "182.16.1.62"
+    WDU_vlan50_ip = "182.116.3.62"
+
+    checkitem ="Checking_WDU_Vlan"
+    #device.device_send_command("Show PoE budget")
+
+    logger.info("[%s] Starting- Checking WDU"%(checkitem))
+
+    checkcommandlist = ["ifconfig br0.%s"%(vlan2_index),"ifconfig br0.%s"%(vlan5_index),"show mobility tunnel all","show mobility tunnel all","ping -S %s -c5 8.8.8.8"%(WDU_vlan20_ip),"ping -S %s -c5 8.8.8.8"%(WDU_vlan50_ip),"ping -S %s -c5 %s"%(WDU_vlan20_ip, WDU_vlan50_ip)]
+    checkitemlist = ["br0.2 | flags=4163<UP,BROADCAST,RUNNING |inet %s | "%(WDU_vlan20_ip),"br0.5 | flags=4163<UP,BROADCAST,RUNNING | inet %s"%(WDU_vlan50_ip),"dialer 0 | UA","dialer 1 | UA","64 bytes from 8.8.8.8: icmp_seq=5 (.*)","64 bytes from 8.8.8.8: icmp_seq=5 (.*)","64 bytes from %s: icmp_seq=5 (.*)"%( WDU_vlan50_ip)]
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
+        time.sleep(5)
+
 if __name__ == '__main__':
     logfilename = "Alpha%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"Alpha_Testing")
@@ -141,7 +176,7 @@ if __name__ == '__main__':
     username = "admin"
     password ="admin"
     device =Device_Tool(ip,port,mode,username,password,"Alpha_Testing")
-    test_cycle = 20000
+    test_cycle = 350
     if device:
         device.device_get_version()
         logger.info("Device Bios Version:%s"%(device.bios_version))
@@ -156,6 +191,8 @@ if __name__ == '__main__':
             Checking_Dialer(device)
             Checking_Vlan(device)
             Checking_Tunnel(device)
+            Checking_WDU_Vlan(device)
+            Checking_GPS(device)
             device.device_send_command("show version")
         #Reset_log(device)
         #Pretesting_Cellular(device)

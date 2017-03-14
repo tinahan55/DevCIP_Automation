@@ -25,30 +25,33 @@ class powerCycle:
     #power cycle device
     #parameter: relay ip, user name, password, device name
     def powerControl(self, ip, userName, passwd, devName):
-        self.http = httplib2.Http(disable_ssl_certificate_validation=True, timeout=5)
-        #self.http = httplib2.Http(timeout=5)
-        self.ipAddr = "http://" + ip
-        self.url = "http://" + ip + "/login.tgi"
-        header = {'Content-Type': 'application/x-www-form-urlencoded'}
-        data = {'Username':userName, 'Password':passwd}
-        data = urllib.urlencode(data)
-        indexPage = "http://" + ip +"/index.htm"
-        devCheck = False 
-        
-        #login power control web
-        response, content = self.http.request(self.url, 'POST', headers=header, body=data)
-        header = {'Cookie': response['set-cookie']}
-        print header
-        response, self.content = self.http.request(indexPage, 'GET', headers=header)
-        #print response
-        #print self.content
-        if int(str(self.content).find("Ethernet Power Controller")) > 0 :
-            print "Login power control successful"
+        try:
+            self.http = httplib2.Http(disable_ssl_certificate_validation=True, timeout=5)
+            #self.http = httplib2.Http(timeout=5)
+            self.ipAddr = "http://" + ip
+            self.url = "http://" + ip + "/login.tgi"
+            header = {'Content-Type': 'application/x-www-form-urlencoded'}
+            data = {'Username':userName, 'Password':passwd}
+            data = urllib.urlencode(data)
+            indexPage = "http://" + ip +"/index.htm"
+            devCheck = False
 
-        else :
-            print "Login power control fail"
-            return "fail"
+            #login power control web
+            response, content = self.http.request(self.url, 'POST', headers=header, body=data)
+            header = {'Cookie': response['set-cookie']}
+            print header
+            response, self.content = self.http.request(indexPage, 'GET', headers=header)
+            #print response
+            #print self.content
+            if int(str(self.content).find("Ethernet Power Controller")) > 0 :
+                print "Login power control successful"
 
+            else :
+                print "Login power control fail"
+                return "fail"
+
+        except Exception, ex:
+            print "[powerCycle.py] exception fail:%s " % (str(ex))
 
         #parse device information
         tableTmp = re.findall(r'individual control table.*?([^*]*)/individual control table', str(self.content))
