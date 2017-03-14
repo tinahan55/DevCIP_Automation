@@ -7,23 +7,9 @@ from lib.Tool import *
 from time import gmtime, strftime
 
 networktool = Network()
-def set_log(filename,loggername):
-    logpath = os.path.join(os.getcwd(), 'log')
-    if not os.path.exists(logpath):
-        os.makedirs(logpath)
-    filepath = os.path.join(logpath, filename)
-    logger = logging.getLogger(loggername)
-    logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh = logging.FileHandler(filepath)
-    fh.setLevel(logging.INFO)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    console = logging.StreamHandler()
-    console.setLevel(logging.DEBUG)
-    console.setFormatter(formatter)
-    logger.addHandler(console)
-    return logger
+mainlogger = Log("OS-1623_ssd", "OS-1623_ssd")
+
+
 
 def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     title = "[%s][%s]"%(checkitem,checkcommand)
@@ -44,7 +30,6 @@ def  check_booting(hostip,check_cycle):
     return k
 
 if __name__ == '__main__':
-    mainlogger = Log("OS-1623_ssd", "OS-1623_ssd")
     if len(sys.argv) > 4:
         device_info = sys.argv[1].split("_")
         login_info = sys.argv[2].split("_")
@@ -60,8 +45,9 @@ if __name__ == '__main__':
         din_relay_user = din_relay_info[1]
         din_relay_pwd = din_relay_info[2]
         din_relay_device_name = din_relay_info[3]
-        test_cycle = powercycle_info[0]
-        power_cycle_sleep = powercycle_info[1]
+        test_cycle = int(powercycle_info[0])
+        power_cycle_sleep = int(powercycle_info[1])
+        print sys.argv
         '''
                 logfilename = "coolboot%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
                 logger = set_log(logfilename,"cold_boot")
@@ -80,28 +66,27 @@ if __name__ == '__main__':
         checkcommandlist = ["show interface all","lsblk -l"]
         checkitemlist = ["maintenance 0 (.*) up","sda | 29.8G"]
         try:
-            device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"check_list")
+            device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"OS-1623_ssd")
             powerCycle = powerCycle()
             if device:
                 device.device_get_version()
-                #mainlogger.info("Device Bios Version:%s"%(device.bios_version))
-                #mainlogger.info("Device recovery image:%s"%(device.boot_image))
-                #mainlogger.info("Device build image:%s"%(device.build_image))
+                mainlogger.info("Device Bios Version:%s"%(device.bios_version))
+                mainlogger.info("Device recovery image:%s"%(device.boot_image))
+                mainlogger.info("Device build image:%s"%(device.build_image))
                 for k in range(0, test_cycle):
-                    #logger.info("[%s][power_cycle_round]Round :%s"%(k,power_cycle_result))
-                    power_cycle_result =powerCycle.powerControl(din_relay_ip, din_relay_user, din_relay_pwd, din_relay_device_name )
-                    #mainlogger.info("[%s][power_cycle_result]result :%s"%(k,power_cycle_result))
+                    power_cycle_result =powerCycle.powerControl(din_relay_ip, din_relay_user, din_relay_pwd, din_relay_device_name)
+                    mainlogger.info("[%s][power_cycle_result]result :%s"%(k,power_cycle_result))
                     if power_cycle_result:
-                        #mainlogger.info("[%s][power_cycle_sleep]%s seconds"%(k,power_cycle_sleep))
+                        mainlogger.info("[%s][power_cycle_sleep]%s seconds"%(k,power_cycle_sleep))
                         time.sleep(2)
                         count = check_booting(device_ip,power_cycle_sleep)
-                        #mainlogger.info("[%s][power_cycle_sleep]wait %s seconds"%(k,count))
+                        mainlogger.info("[%s][power_cycle_sleep]wait %s seconds"%(k,count))
                         if count < power_cycle_sleep:
                             #time.sleep(power_cycle_sleep)
-                            device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"check_list")
+                            device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"1623_ssd")
                             if device:
                                 checkitem = "device_check_interface_and_mobility"
-                                #mainlogger.info("[%s]Starting"%(checkitem))
+                                mainlogger.info("[%s]Starting"%(checkitem))
                                 for index,value in enumerate(checkcommandlist):
                                     checkmatch = checkitemlist[index]
                                     device_check_info(mainlogger,device,checkitem,value,checkmatch)
