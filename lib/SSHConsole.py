@@ -8,7 +8,7 @@ import paramiko
 
 class SSHConnect(object):
 
-    def __init__(self,ipaddress,port=22,username="admin",password="admin",logname="SSHConnect",timeout=10):
+    def __init__(self,ipaddress,port=22,username="admin",password="admin",logname="SSHConnect",timeout=30):
         self.ipaddress = ipaddress
         self.port =port
         self.username = username
@@ -23,7 +23,7 @@ class SSHConnect(object):
 
     def connect(self):
         try:
-            self.ssh.connect(self.ipaddress, port=self.port, username=self.username, password= self.password, timeout=int(10))
+            self.ssh.connect(self.ipaddress, port=self.port, username=self.username, password= self.password, timeout=int(30))
             self.sshresult = ""
             time.sleep(1)
             if(self.ssh):
@@ -90,7 +90,7 @@ class SSHConnect(object):
                 if self.__set_command_mode(mode):
                     self.remote_conn.send("%s\n"%(command))
                     time.sleep(timeout)
-                    self.sshresult = self.remote_conn.recv(5000)
+                    self.sshresult = self.remote_conn.recv(10000)
                     if logflag == True:
                         self.logger.info(self.sshresult)
                     return True
@@ -108,8 +108,9 @@ class SSHConnect(object):
                 if self.__set_command_mode(mode):
                     self.remote_conn.send((command + "\n").encode('ascii'))
                     time.sleep(timeout)
-                    self.sshresult = self.remote_conn.recv(5000)
+                    self.sshresult = self.remote_conn.recv(10000)
                     match_result =self.__Patern_Match(result, self.sshresult)
+                    #print "[match_result]:%s"%(match_result)
                     return match_result
          except Exception,ex:
              self.logger.error("[write_multip_command_match]write command fail:%s "%(str(ex)))
@@ -123,7 +124,7 @@ class SSHConnect(object):
                         result = resultlist[index]
                         self.remote_conn.send((command + "\n").encode('ascii'))
                         time.sleep(timeout)
-                        self.sshresult = self.remote_conn.recv(5000)
+                        self.sshresult = self.remote_conn.recv(10000)
                         match_result =self.__Patern_Match(result, self.sshresult)
                         if (match_result == False):
                             self.logger.error("[write_multip_command_match]command(%s):%s "%(command,match_result))
@@ -136,7 +137,7 @@ class SSHConnect(object):
     def shell_message(self):
         message =""
         if(self.ssh):
-            message =  self.remote_conn.recv(5000)
+            message =  self.remote_conn.recv(10000)
         return message
 
     def __Patern_Match(self,pattern,text):
