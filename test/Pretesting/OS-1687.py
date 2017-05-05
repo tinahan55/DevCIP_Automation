@@ -8,7 +8,7 @@ from lib.Tool import *
 from time import gmtime, strftime
 
 networktool = Network()
-mainlogger = Log("OS-1623_ssd", "OS-1623_ssd")
+mainlogger = Log("OS-1687", "OS-1687")
 
 
 
@@ -18,7 +18,9 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     checkresult = device.device_send_command_match(checkcommand,5,checkmatch)
     logger.info("%s check %s result :%s"%(title,checkmatch,checkresult))
     if checkresult== False:
+        return checkresult
         logger.info("%s check %s error :%s"%(title,checkmatch,device.target_response))
+    return checkresult
 
 def  check_booting(hostip,check_cycle):
     k = 0
@@ -49,9 +51,9 @@ if __name__ == '__main__':
         power_cycle_sleep = int(powercycle_info[1])
         print sys.argv
     else:
-        logfilename = "OS-1623_ssd%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
+        logfilename = "OS-1687%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
         #mainlogger = set_log(logfilename,"OS-1623_ssd")
-        device_ip = "10.2.53.163"
+        device_ip = "10.2.53.159"
         device_port = 22
         device_connect_type ="ssh"
         username = "admin"
@@ -59,16 +61,14 @@ if __name__ == '__main__':
         din_relay_ip = "10.2.53.199"
         din_relay_user ="root"
         din_relay_pwd ="lilee1234"
-        din_relay_device_name = "R1-Alpha-STS2"
+        din_relay_device_name = "R1-159"
         #"R1-158"
         test_cycle = 2000
         power_cycle_sleep = 180
         Sata0_size = "29.8G"
 
-
-
     try:
-        device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"OS-1623_ssd")
+        device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"OS-1687")
         powerCycle = powerCycle()
 
         if device:
@@ -78,6 +78,8 @@ if __name__ == '__main__':
             mainlogger.info("Device build image:%s"%(device.build_image))
 
             for k in range(0, test_cycle):
+
+                #mainlogger.info("[%s][power_cycle_result]result :%s" % (k, power_cycle_result))
                 power_cycle_result = powerCycle.powerControl(din_relay_ip, din_relay_user, din_relay_pwd, din_relay_device_name)
                 mainlogger.info("[%s][power_cycle_result]result :%s"%(k,power_cycle_result))
                 if power_cycle_result:
@@ -87,21 +89,36 @@ if __name__ == '__main__':
                     mainlogger.info("[%s][power_cycle_sleep]wait %s seconds"%(k,count))
                     if count < power_cycle_sleep:
                         #time.sleep(power_cycle_sleep)
-                        device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"OS-1623_ssd")
+                        device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"OS-1687")
                         if device:
                             device.device_send_command("update terminal paging disable")
-                            Sata0_result = device.device_send_command("/usr/sbin/udevadm info -q name --name=/dev/disk/by-path/pci-0000:00:13.0-ata-1.0")
-                            if Sata0_result:
-                                sub_match = re.findall('sd(.*)\n', device.target_response)
-                                if sub_match:
-                                    Sata0 = "sd%s" % (sub_match[0])
-                            checkitem = "device_check_interface_and_mobility"
-                            mainlogger.info("[%s]Starting"%(checkitem))
-                            checkcommandlist = ["show interface all", "lsblk -l | grep %s | grep disk"%(Sata0)]
-                            checkitemlist = ["maintenance 0 (.*) up", "%s"%(Sata0_size)]
-                            for index,value in enumerate(checkcommandlist):
-                                checkmatch = checkitemlist[index]
-                                device_check_info(mainlogger,device,checkitem,value,checkmatch)
-
+                            device.device_send_command("show platform led")
+                            device.device_send_command("ifconfig -a")
+                            dialer0_result = device_check_info(mainlogger, device, "OS-1687-D0","show interface all","dialer 0(.*) up")
+                            if dialer0_result == False:
+                                device.device_send_command("dmesg | grep usb1")
+                                device.device_send_command("show running-configuration")
+                                device.device_send_command("show startup-configuration")
+                                break
+                            dialer1_result = device_check_info(mainlogger, device, "OS-1687-D1","show interface all","dialer 1(.*) up")
+                            if dialer1_result == False:
+                                device.device_send_command("dmesg | grep usb2")
+                                device.device_send_command("show running-configuration")
+                                device.device_send_command("show startup-configuration")
+                                break
+                            wlan0_result = device_check_info(mainlogger, device, "OS-1687-W0","show interface all","wlan 0(.*) up")
+                            if wlan0_result == False:
+                                device.device_send_command("dmesg | grep wlan0")
+                                device.device_send_command("show running-configuration")
+                                device.device_send_command("show startup-configuration")
+                                break
+                            '''
+                                                        wlan1_result = device_check_info(mainlogger, device, "OS-1687-W1","show interface all","wlan 1(.*) up")
+                                                        if wlan1_result == False:
+                                                            device.device_send_command("dmesg | grep wlan1")
+                                                            device.device_send_command("show running-configuration")
+                                                            device.device_send_command("show startup-configuration")
+                                                            break
+                                                        '''
     except Exception,ex:
-        logging.error("[OS-1623_ssd]exception fail:%s "%(str(ex)))
+        logging.error("[OS-1687]exception fail:%s "%(str(ex)))
