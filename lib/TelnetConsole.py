@@ -26,7 +26,7 @@ class Telnet_Console(object):
             kickresult = self.kick_off_user()
             if kickresult ==True:
                 time.sleep(2)
-            self.telnet = telnetlib.Telnet(self.ipaddress,int(self.port), timeout=10)
+            self.telnet = telnetlib.Telnet(self.ipaddress,int(self.port), timeout=60)
             readstring = self.telnet.read_until('Welcome to Lilee Systems', timeout=10)
             if 'Welcome to Lilee Systems' not in readstring:
                 self.IsConnect = False
@@ -128,14 +128,14 @@ class Telnet_Console(object):
         mode_result = False
         if mode == "shell":
                 self.telnet.write(("\n").encode('ascii'))
-                readstring =self.telnet.read_until('bash', timeout=3)
-                if 'bash' not in readstring:
+                readstring =self.telnet.read_until('#', timeout=3)
+                if '#' not in readstring:
                     self.telnet.write(("diag shell\n").encode('ascii'))
                     readstring = self.telnet.read_until('Password', timeout=3)
                     if "Password" in readstring:
                         self.telnet.write(("Unsupported!\n").encode('ascii'))
-                        readstring =self.telnet.read_until('bash', timeout=3)
-                        if 'bash' in readstring:
+                        readstring =self.telnet.read_until('#', timeout=3)
+                        if '#' in readstring:
                             mode_result =True
                 else:
                     mode_result = True
@@ -158,9 +158,10 @@ class Telnet_Console(object):
             if self.__set_command_mode(mode):
                 self.telnet.write((command + "\n").encode('ascii'))
                 self.telnetresult = self.telnet.read_until(checkResponse, timeout=int(timeout))
+
                 if logflag == True:
                         self.logger.info(self.telnetresult)
-                if len(self.telnetresult)!=0:
+                if len(self.telnetresult)!=0 and 'Error' not in self.telnetresult :
                     return True
                 else:
                     return False
@@ -215,7 +216,6 @@ class Telnet_Console(object):
            p = re.compile(pattern)
            match = p.search(text)
            if (match == None):
-               print "pattern : %s , text: %s"%(pattern,text)
                return False
            else:
                return True

@@ -57,7 +57,6 @@ def check_result(device_type,testrail_buildversion):
         updateresult = testrail.update_test_result(project_name,test_plan,test_run,device_type,test_id,testrail_buildversion,result,comment,True)
         logger.write("info","[%s][%s]update_test_result : %s" % (device_type,testrail_buildversion,updateresult))
 
-
 if __name__ == '__main__':
     if len(sys.argv)>1:
         logger.write("info","Vlan Testing Starting")
@@ -68,42 +67,83 @@ if __name__ == '__main__':
         device_port = int(device_info[2])
         username =login_info[0]
         password =login_info[1]
+        interface ="maintenance 0"
         configlist = list()
+
+
+
         ## Device Connection
         device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"example")
         if device:
 
             ## Get device version for build and typ
             device.device_get_version()
+            device.device_get_hostname()
+            device.device_get_register_MAC(interface)
             logger.write("info","Device type:%s"%(device.device_type))
             logger.write("info","Device Bios Version:%s"%(device.bios_version))
             logger.write("info","Device recovery image:%s"%(device.boot_image))
             logger.write("info","Device build image:%s"%(device.build_image))
             logger.write("info","Device testrail image:%s"%(device.testrail_build_version))
+            logger.write("info","Device mac:%s"%(device.device_register_MAC))
+            logger.write("info","Device hostname:%s"%(device.device_hostname))
+            logger.write("info","Device version:%s"%(device.branch_version))
+
+            ## get profile list
+            device_profile = Device_Profile(device.device_hostname,device.branch_version,device_ip,device.device_register_MAC)
+            #device_profile = Device_Profile("Controller2","3.3","10.2.52.53","e4:2c:56:db:fb:a4")
+
+            ## print initial_config
+            initial_config = device_profile.get_device_profile_list("Initial Configuration","All")
+            for config in initial_config:
+                device.device_send_command(config)
 
 
-            ## Inital setting for testing
-            device.device_send_command("update terminal paging disable")
-            device.device_send_command("config app-engine 0 disable")
-
-            ##get config
-            configlist = set_vlan_port_config()
-
-            time.sleep(5)
-
-            #no set config
-            device.device_set_no_config(configlist)
+            configlist = device_profile.get_config_profile_list("user_testing","All")
+            for config in configlist:
+                print config
+                device.device_send_command(config)
 
             time.sleep(10)
 
+
+            checklist = device_profile.get_check_values("checkuser")
+            for check in checklist:
+                test_id = check["ID"]
+                description =  check["Description"]
+                command = check["command"]
+                checkmatch = check["check"]
+                title = "[%s][%s]" % (description, command)
+                logger.write("info","%s starting" % (title))
+                checkresult = device.device_send_command_match(command, 10, "admin")
+                logger.write("info","%s check %s result: %s" % (title, checkmatch, checkresult))
+                if checkresult == True:
+                    result = "Passed"
+                else:
+                    result = "Failed"
+
+
+            #vlan_10_config = device_profile.get_device_profile_list("vlans","vlan10")
+            #for config in vlan_10_config:
+            #    print config
+            #vlan_100_config = device_profile.get_device_profile_list("vlans","vlan100")
+            #for config in vlan_100_config:
+            #    print config
+
+            #port_value = device_profile.get_device_profile_value("port","appengine")
+            #print port_value["default_vlan"],port_value["index"],port_value["port_tagged"],port_value["type"]
+
+
+
+            #time.sleep(10)
+
             #set config
-            device.device_set_configs(configlist)
+            #device.device_set_configs(vlan_10_config)
 
             #check result
-            check_result(device.device_type,device.testrail_build_version)
+            #check_result(device.device_type,device.testrail_build_version)
 
-            logger.write("info","Vlan Testing Done")
-
+            #logger.write("info","Vlan Testing Done")
 
 
 

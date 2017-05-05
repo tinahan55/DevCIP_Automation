@@ -55,7 +55,7 @@ class SSHConnect(object):
         time.sleep(2)
         response_result =  self.remote_conn.recv(5000)
         if mode == "shell":
-            if "bash" in response_result:
+            if "#" in response_result:
                 mode_result = True
             elif "localdomain" in response_result:
                 self.remote_conn.send("%s\n"%("diag shell"))
@@ -68,16 +68,18 @@ class SSHConnect(object):
                     if "bash" in response_result:
                         mode_result =True
 
+
         elif mode == "lilee":
             if "localdomain" in response_result:
                 mode_result = True
 
-            elif "bash" in response_result:
+            elif "#" in response_result:
                 self.remote_conn.send("%s\n"%("exit"))
                 time.sleep(2)
                 response_result = self.remote_conn.recv(5000)
                 if "localdomain" in response_result:
                     mode_result =True
+
         else:
             mode_result=True
         return mode_result
@@ -93,7 +95,11 @@ class SSHConnect(object):
                     self.sshresult = self.remote_conn.recv(10000)
                     if logflag == True:
                         self.logger.info(self.sshresult)
-                    return True
+
+                    if 'Error' not in self.sshresult:
+                         return True
+                    else:
+                         return False
 
             else:
                 self.logger.info("Connection not opened.")

@@ -20,11 +20,8 @@ class Network(object):
             isUpBool = True
         return isUpBool
 
-
-
 import logging
 from time import gmtime, strftime
-
 class Log(object):
     def __init__(self,log_file_name,log_name):
         self.logfilename = "%s%s.log"%(log_file_name,strftime("%Y%m%d%H%M", gmtime()))
@@ -68,4 +65,101 @@ class Log(object):
 
     def error(self,log_text):
         self.logger.error(log_text)
+
+import urllib2,urllib, json, base64
+class APIClient:
+    def __init__(self,base_url):
+        if not base_url.endswith('/'):
+            base_url += '/'
+        self.__url = base_url
+
+    def send_get(self, uri,data):
+        url_values = urllib.urlencode(data)
+        uri = uri+ "?"+ url_values
+        return self.__send_request('GET', uri, None)
+
+	def send_post(self, uri, data):
+		return self.__send_request('POST', uri, data)
+
+
+    def __send_request(self, method, uri, data):
+		url = self.__url + uri
+		request = urllib2.Request(url)
+		if (method == 'POST'):
+			request.add_data(json.dumps(data))
+
+		e = None
+		try:
+			response = urllib2.urlopen(request).read()
+		except urllib2.HTTPError as e:
+			response = e.read()
+
+		if response:
+			result = json.loads(response)
+		else:
+			result = {}
+
+		if e != None:
+			if result and 'error' in result:
+				error = '"' + result['error'] + '"'
+			else:
+				error = 'No additional error message received'
+			raise APIError('TestRail API returned HTTP %s (%s)' %
+				(e.code, error))
+
+		return result
+
+class APIError(Exception):
+	pass
+
+
+
+from collections import OrderedDict
+
+class PassProfileJson:
+    def __init__(self):
+        self.key = ""
+        self.keyvalue=""
+
+
+    def remove_parsing_failstring(self,content):
+        result =  json.loads(content.replace('"','\\"').replace("u'","'").replace("'","\""))
+        return result
+
+
+    def get_value_by_key(self,content,keyname):
+        keyvalue =''
+        for key, value in dict.items(self.remove_parsing_failstring(content)):
+            if key ==  keyname:
+                keyvalue = value
+        return keyvalue
+
+    def get_configlist_by_key(self,content,keyname):
+
+        configlist =  list()
+        keyvalue =''
+        for key, value in dict.items(self.remove_parsing_failstring(content)):
+            if key ==  keyname:
+                configlist = value.split("\n")
+        return configlist
+
+    def get_key_value_list(self,content):
+        valuelist = list()
+        for key, value in sorted(dict.items(self.remove_parsing_failstring(content))):
+                valuelist.append(value)
+        return valuelist
+
+
+
+
+
+if __name__ == '__main__':
+    apiclient = APIClient('http://10.2.8.133:8000/api/')
+    data ={"device_name":'R5-LMC',"profile_name":'basic_config'}
+    result = apiclient.send_get("ProfileByName",data)
+    content = result[0]["content"]
+    result =  json.loads(content.replace('"','\\"').replace("u'","'").replace("'","\""))
+    print result["eth3_ip"]
+    #for item in datalist:
+    #    print item
 

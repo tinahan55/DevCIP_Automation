@@ -3,7 +3,7 @@ from lib.Configuration import *
 import logging
 import os
 from time import gmtime, strftime
-from Config.function import *
+from test.Function.Config.function import *
 
 
 

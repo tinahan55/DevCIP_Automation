@@ -110,7 +110,6 @@ class ImageTool(object):
         self.update_build_image = "LileeOS_%s_%s"%(image_version,imageinfo.image_build_no)
         self.update_image_url_path =imageinfo.image_url_path
 
-
     def _set_default_config(self,interface,ip_mode,ipaddress,netmask):
         defaultcommandlist = list()
         defaultcommandlist.append("config security level permissive")
@@ -166,7 +165,7 @@ class ImageTool(object):
             resultlist = ["disk update","download"]
             result = self.device.device_send_multip_command_match(commandlist,20,resultlist)
         else:
-            result = self.device.device_send_command_match(updatecmd,10,"downloaded")
+            result = self.device.device_send_command_match(updatecmd,20,"downloaded")
         time.sleep(5)
         if result == True:
             self.logger.info("start to download to update image")
@@ -205,11 +204,12 @@ class ImageTool(object):
             IF_Udate = self._check_device_image(self.update_build_image)
             self.logger.info('[upgrade_device_image] check if need to update:%s'%(IF_Udate))
             if IF_Udate ==True:
+                    self.device.device_no_config()
                     pingresult = self.device.device_send_command_match(pingcommand,10,pingresult)
                     if pingresult != True:
                         self.logger.info('[upgrade_device_image][ping fail]set default config')
                         self._set_default_config(maintain_interface,maintenance_ip_mode,maintenanceip,netmask)
-                        time.sleep(10)
+                        time.sleep(15)
                         pingresult = self.device.device_send_command_match(pingcommand,10,pingresult)
                         if pingresult!=True:
                             self.logger.info('[upgrade_device_image][ping fail]start reboot')
@@ -219,7 +219,7 @@ class ImageTool(object):
                                 self.logger.info('[upgrade_device_image][after rebooting]set default config')
                                 self._set_default_config(maintain_interface,maintenance_ip_mode,maintenanceip,netmask)
                                 time.sleep(10)
-                                pingresult = self.device_send_command_match(pingcommand,2,pingresult)
+                                pingresult = self.device.device_send_command_match(pingcommand,2,pingresult)
                                 if pingresult ==True:
                                     self.logger.info("[upgrade_device_image]The image is the oldest one ,need to upgrade")
                                     upgraderesult = self._upgrade(self.update_image_url_path,self.update_build_image)
@@ -258,14 +258,34 @@ if __name__ == '__main__':
         username =login_info[0]
         password =login_info[1]
         maintain_interface =maintain_info[0]
+    image_server = '10.2.10.17'
+    image_version = '3.4'
+    image_mode = 'New'
+    device_connect_type ='telnet'
+    username ='admin'
+    password ='admin'
+    maintain_interface = 'maintenance 0'
+    maintain_info_list = ['10.2.11.144','10.2.11.161','10.2.11.141','10.2.11.142','10.2.11.249','10.2.11.250','10.2.11.137','10.2.11.137','10.2.11.182','10.2.11.181']
+    device_ip_list = ['10.2.11.4','10.2.11.61','10.2.11.61','10.2.11.61','10.2.11.58','10.2.11.58','10.2.11.7','10.2.11.7','10.2.11.8','10.2.11.8']
+    port_list = [3005,2045,2036,2037,2045,2041,4004,4001,4004,4001]
+
+    #maintain_info_list = ['10.2.11.144']
+    #device_ip_list = ['10.2.11.4']
+    #port_list = [3005]
+
+
+    for index, device_ip in enumerate(device_ip_list):
+
         if "eth" not in maintain_interface:
             maintain_interface = "maintenance 0"
         else:
             maintain_interface = maintain_interface.replace("eth","eth ")
 
-        maintaince_ip_mode =maintain_info[1]
-        maintain_ip= maintain_info[2]
-        maintain_netmask =maintain_info[3]
+        maintaince_ip_mode ='static'
+        maintain_ip= maintain_info_list[index]
+        maintain_netmask ="255.255.252.0"
+        device_port = port_list[index]
+        image_build_no = 4
 
 
         ## running image update

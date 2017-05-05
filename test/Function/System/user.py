@@ -36,7 +36,7 @@ logfilename = "user%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
 logger = set_log(logfilename,"user_testing")
 
 if __name__ == '__main__':
-    ip ="10.2.52.54"
+    ip ="10.2.52.51"
     port = 22
     mode ="ssh"
     username = "admin"

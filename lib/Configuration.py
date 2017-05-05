@@ -52,8 +52,8 @@ class Interface(object):
         commandlist = list()
         commandlist.append("config switch add vlan %s"%(vlan_index))
         if port_type == "app-engine":
-            commandlist.append("config switch vlan %s add app-engine 0 port 0"%(vlan_index))
-            commandlist.append("config switch vlan %s app-engine 0 port 0 egress %s"%(vlan_index,vlan_tagged))
+            commandlist.append("config switch vlan %s add app-engine %s port 0"%(vlan_index,port_index))
+            commandlist.append("config switch vlan %s app-engine %s port 0 egress %s"%(vlan_index,port_index,vlan_tagged))
         elif port_type =="port":
             commandlist.append("config switch vlan %s add port %s"%(vlan_index,port_index))
             commandlist.append("config switch vlan %s port %s egress %s"%(vlan_index,port_index,vlan_tagged))
@@ -173,7 +173,10 @@ class Function(object):
         commandlist =list()
         if route_type == "ip":
             if route_mode == "network":
-                if gateway != "":
+                if gateway !="" and interface!="":
+                    commandlist.append("config route ip network %s netmask %s gateway %s interface  %s"%(route_ip, route_netmask, gateway,interface))
+
+                elif gateway != "":
                     commandlist.append("config route ip network %s netmask %s gateway %s"%(route_ip, route_netmask, gateway))
                 elif interface != "":
                     commandlist.append("config route ip network %s netmask %s interface %s" % (route_ip, route_netmask, interface))
