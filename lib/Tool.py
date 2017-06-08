@@ -112,8 +112,6 @@ class APIClient:
 class APIError(Exception):
 	pass
 
-
-
 from collections import OrderedDict
 
 class PassProfileJson:
@@ -150,10 +148,35 @@ class PassProfileJson:
         return valuelist
 
 
+import smtplib
+from fluentmail import FluentMail,TLS
+import base64
+
+class sqa_mail:
+    def __init__(self):
+        self.mail_host = "smtp.office365.com"
+        self.mail_user ="sqa.testrail@lileesystems.com"
+        self.mail_pass = "5tgb^YHN"
+        self.sender = "sqa.testrail@lileesystems.com"
+
+    def send_mail(self,receivers,mail_subject,mail_body):
+        try:
+            mail = FluentMail(self.mail_host, 587, TLS)
+            mail.credentials(self.mail_user,  self.mail_pass)\
+                .from_address(self.sender)\
+                .to(receivers)\
+                .subject(mail_subject)\
+                .body(mail_body)\
+                .send()
+            print 'send mail success'
+        except smtplib.SMTPException ,ex:
+            print "send mail error:"+str(ex)
 
 
 
 if __name__ == '__main__':
+
+    '''
     apiclient = APIClient('http://10.2.8.133:8000/api/')
     data ={"device_name":'R5-LMC',"profile_name":'basic_config'}
     result = apiclient.send_get("ProfileByName",data)
@@ -162,4 +185,10 @@ if __name__ == '__main__':
     print result["eth3_ip"]
     #for item in datalist:
     #    print item
+    '''
+
+    # Mail testing
+    sqamail = sqa_mail()
+    sqamail.send_mail("ricky.wang@lileesystems.com","sqa mail testing",u"test 123 go")
+
 
