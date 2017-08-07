@@ -143,7 +143,7 @@ def Dialer_firmware_switch(device): #STS support only
                         sub_match2 = re.findall(r"((\d)(.*)_(.*) V)", device.target_response)
                         if count.__str__() == (sub_match2[0][0][0]):
                             print "Check_True"
-                            result2=Dialer_Custom_Check(device)
+                            result2 = Dialer_Custom_Check(device)
                             update_result = result2
                             logger.info("[Check_firmware_%d_%d]  Check correct..." % (max_index, count))
                         else:
@@ -313,7 +313,9 @@ def Server_set_dialer(device):
 def Dialer_Simlot_Change(device):
     sim_result=True
     logger.info("[Check Sim-slot]")
-    if "STS" in Server_Type:
+    device.device_send_command("config line cellular %s sim-card-slot 0" % (cellular_index))
+    time.sleep(160)
+    '''if "STS" in Server_Type:
         command0 ='debug line cellular %s atcmd "at!uims?"' % (cellular_index)
         command0_match = "!UIMS: 0"
         result0 = device.device_send_command_match(command0, 5, command0_match)
@@ -338,26 +340,36 @@ def Dialer_Simlot_Change(device):
         result0 = device.device_send_command_match(command0, 5, command0_match)
         if result0==False:
             logger.info("[Simlot_Reset to slot 0]") #Force sim-slot to 0
-            device.device_send_command("config cellular-profile LTE sim-card-slot 0")
-            time.sleep(160)
+            device.device_send_command("config line cellular 0/1  sim-card-slot 0")
+            time.sleep(60)
             sim_result=Dialer_Simlot_Change(device)
         else:
             logger.info("[Simlot_Change] Setting  start")
-            command = "config cellular-profile LTE sim-card-slot 1"
+            command = "config line cellular 0/1  sim-card-slot 1"
             command_match = "localdomain"
             result = device.device_send_command_match(command, 10, command_match)
-            time.sleep(160)
+            time.sleep(60)
             if result == False:
                 logger.info("[Config_Simlot_Change] Failed")
-                sim_result = result
+                sim_result = result'''
+    logger.info("[Simlot_Change] Setting  start")
+    command = "config line cellular %s  sim-card-slot 1" % (cellular_index)
+    command_match = "localdomain"
+    result = device.device_send_command_match(command, 10, command_match)
+    time.sleep(120)
+    sim_result = result
+    if result == False:
+        logger.info("[Config_Simlot_Change] Failed")
+
 
     if sim_result:
         if "STS" in Server_Type:
             Iccid00 = "89886920041308836573"
             Iccid01 = "89886891000087039135"
         else:
-            Iccid00 = "89886971511754537071"
-            Iccid01 = "89886891000087039127"
+            Iccid00 = "89886891000087039127"
+            Iccid01 = "89886920031026180016"
+
         logger.info("[Simlot_Change] Checking start...")
         command1='show running-configuration'
         result1= device.device_send_command_match(command1.strip(), 30,"config sim-management iccid %s line cellular %s sim-card-slot 1"%(Iccid01,cellular_index))
@@ -385,27 +397,8 @@ def Dialer_Simlot_Change(device):
                     else:
                         logger.info("[Simlot_Change] Ping Testing failed on sim-slot-0")
                         sim_result = matchresult
-    '''if "STS" in Server_Type:
-        device.device_send_command("config line cellular %s sim-card-slot 0" % (cellular_index))
-        time.sleep(160)
-        command3 = 'debug line cellular %s atcmd "at!uims?"' % (cellular_index)
-        command3_match = "!UIMS: 0" #"now restarting"
-        result3 = device.device_send_command_match(command3, 10, command3_match)
-        if result3 == False:
-            logger.info("Simlot_Change not to 0")
-        else:
-            logger.info("Simlot_Back to 0")
-
-    else:
-        #device.device_send_command("config cellular-profile LTE sim-card-slot 0")
-        command3 = "config cellular-profile LTE sim-card-slot 0"
-        command3_match = "now restarting"
-        result3 = device.device_send_command_match(command3, 10, command3_match)
-        if result3 == False:
-            logger.info("Simlot_Change not to 0")
-        else:
-            logger.info("Simlot_Back to 0")'''
-
+    device.device_send_command("config line cellular %s sim-card-slot 0" % (cellular_index))
+    time.sleep(160)
     return sim_result
 
 def Dialer_Iccid_info(device):
@@ -535,8 +528,8 @@ if __name__ == '__main__':
             Iccid00 = "89886920041308836573"
             Iccid01 = "89886891000087039135"
         else:
-            Iccid00 = "89886971511754537071"
-            Iccid01 = "89886891000087039127"
+            Iccid00 = "89886891000087039127"
+            Iccid01 = "89886920031026180016"
 
         set_result = Dialer_system_check(server_device)
         if set_result:set_result = Dialer_Iccid_info(server_device)
@@ -545,7 +538,8 @@ if __name__ == '__main__':
         logger.info("[DUT] %s" % (server_device.device_get_running_config()))
         if set_result: set_result = Dialer_RRC_Check(server_device) #Dialer should be on 4G mode, 3G not support RRC state.
         if set_result: set_result = Dialer_Simlot_Change(server_device)
-        logger.info("[DUT]Celluar Test Finished")
+
+        logger.info("[DUT]Celluar Basic Test Finished")
         if set_result:
             if "STS" in Server_Type:
                 set_result = Dialer_firmware_switch(server_device)
