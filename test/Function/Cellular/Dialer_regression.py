@@ -488,7 +488,7 @@ if __name__ == '__main__':
     firm_KDDI_7430 = "http://10.1.10.11/tftpboot/RELEASE/SierraWireless/latest/MC7430/SWI9X30C_02.20.03.00_KDDI_000.008_000.zip"
     firm_SoftBank_7430 = "http://10.1.10.11/tftpboot/RELEASE/SierraWireless/latest/MC7430/SWI9X30C_02.20.03.00_Softbank_000.007_000.zip"
 
-    if len(sys.argv) >3:
+    if len(sys.argv) >1:
         connect_type = sys.argv[1]
         Server_Info = sys.argv[2] #telnet_10.2.66.50_2040_10.2.66.61_admin_admin =>connecttype_ip_port_maintenceip_username_password
         server_connect_type = Server_Info.split("_")[0]
