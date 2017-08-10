@@ -524,9 +524,9 @@ if __name__ == '__main__':
         if set_result: set_result = Dialer_Simlot_Change(server_device)
 
         logger.info("[DUT]Celluar Basic Test Finished, result is %s"%(set_result))
-        '''if set_result:
+        if set_result:
             if "STS" in Server_Type:
-                set_result = Dialer_firmware_switch(server_device)'''
+                set_result = Dialer_firmware_switch(server_device)
 
     server_device.device_send_command("reboot")
     logger.info("[DUT]Celluar Test Finished as %s" %(set_result))
