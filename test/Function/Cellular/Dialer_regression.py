@@ -118,7 +118,7 @@ def Dialer_firmware_switch(device): #STS support only
     logger.info("[firmware_switch] Testing...")
     if "STS" in Server_Type:
         command0 = "show line cellular %s firmware-list" % (cellular_index)
-        result0 = device.device_send_command_match(command0, 10, "localdomain ")
+        result0 = device.device_send_command_match(command0, 10, "localdomain")
         if result0:
             logger.info("[Max Firmware index] Get max-index")
             sub_match0 = re.findall(r"(\d+.\d+.\d+.\d+\d+_\S+)", device.target_response)
