@@ -115,10 +115,10 @@ def Dialer_Get_Firmware_index(device):
         return index_active, run_version
 
 def Dialer_firmware_switch(device): #STS support only
-    logger.info("[firmware_switch] Testing...")
+    logger.info("[Firmware_Switch] Test Starting...")
     if "STS" in Server_Type:
         command0 = "show line cellular %s firmware-list" % (cellular_index)
-        result0 = device.device_send_command_match(command0, 10, "localdomain ")
+        result0 = device.device_send_command_match(command0, 10, "localdomain")
         if result0:
             logger.info("[Max Firmware index] Get max-index")
             sub_match0 = re.findall(r"(\d+.\d+.\d+.\d+\d+_\S+)", device.target_response)
@@ -126,40 +126,43 @@ def Dialer_firmware_switch(device): #STS support only
             count=1
             update_result=result0
             while count < (max_index+1):
-                logger.info("[Dialer_Update_firmware-%d_%d]  Testing start..." % ( max_index, count))
+                logger.info("[Update_Firmware-%d_%d] Setting start..." % ( max_index, count))
                 command1 = "update line cellular %s firmware-switch %s " % (cellular_index, count)
                 result = device.device_send_command_match(command1, 300,"Please wait 2 mins ")
                 #print device.target_response
                 #count= count + 1
                 if result==False:
-                    logger.info("[Firmware_switch] index %s switch failed..." % (count))
-                    print "Update failed"
+                    logger.info("[Firmware_Switch] index %s switch setting failed..." % (count))
                     update_result=result
                     break
                 else:
-                    logger.info("[Update_firmware-%d_%d] Successfully" % (max_index, count))
+                    logger.info("[Update_Firmware-%d_%d] Setting Successfully" % (max_index, count))
                     command2 = "show line cellular %s firmware-list" % (cellular_index)
-                    result2 = device.device_send_command_match(command2, 10, "localdomain ")
+                    result2 = device.device_send_command_match(command2, 10, "localdomain")
                     if result2:
-                        logger.info("[Check_firmware_%d_%d]  Testing start..." % (max_index, count))
+                        logger.info("[Update_Firmware-%d_%d] Checking start..." % (max_index, count))
                         sub_match2 = re.findall(r"((\d)(.*)_(.*) V)", device.target_response)
                         if count.__str__() == (sub_match2[0][0][0]):
-                            print "Check_True"
+                            logger.info("[Update_Firmware-%d_%d] Checking Successfully" % (max_index, count))
+                            #logger.info("[Update_Firmware-%d_%d] Custom_Check Start..." % (max_index, count))
                             result2 = Dialer_Custom_Check(device)
                             update_result = result2
-                            logger.info("[Check_firmware_%d_%d]  Check correct..." % (max_index, count))
+                            #logger.info("[Check_Firmware_%d_%d] Custom_Check Correct..." % (max_index, count))
                         else:
-                            print "Check_False"
-                            logger.info("[Check_firmware_%d_%d]  Check failed..." % (max_index, count))
+                            logger.info("[Update_Firmware-%d_%d] Checking failed,skip custom_check" % (max_index, count))
                             update_result = result2
+                    else:
+                        logger.info("[Update_Firmware-%d_%d] Show firmware-list failed" % (max_index, count))
+                        print device.target_response
+                        sys.exit(0)
                 count = count + 1
         else:
             logger.info("[Max Firmware index] Get max-index failed")
             update_result = result0
-        logger.info("[Change_firmware to Generic] ")
+        logger.info("[Change_firmware back to Generic] ")
         device.device_send_command("update line cellular %s firmware-switch 3 " % (cellular_index))
-        time.sleep(160)
         return update_result
+        time.sleep(160)
 
 def Dialer_Update_firmware(device): #Suggest to execute locally, because need to reboot DUT after update each firmware
     Update_result = False
@@ -244,10 +247,13 @@ def Dialer_Update_firmware(device): #Suggest to execute locally, because need to
     return Update_result
 
 def Dialer_Custom_Check(device):
-    logger.info("[Dialer_Custom Check] Testing start...")
+    #logger.info("[Dialer_Custom Check] Testing start...")
+    #https: // lileesystems.atlassian.net / browse / OS - 1659
+    logger.info("[Dialer_Custom Check] Custom_Check Start...")
     custom_result= True
     command0 = "show line cellular all"
-    result0 = device.device_send_command_match(command0, 10, "Unknown")
+    result0 = device.device_send_command_match(command0, 10, "localdomain")
+    custom_result = result0
     if result0:
         sub_match0 = re.findall(r'cellular\s*%s\s*([A-Za-z]+)\s*' % (cellular_index), device.target_response)
         # print sub_match0
@@ -256,9 +262,9 @@ def Dialer_Custom_Check(device):
         if type =="GENERIC":
             logger.info("[Dialer_Custom Check] %s Testing start..."%(type))
             command = "debug line cellular %s atcmd \"at!custom?\"" % (cellular_index)
-            custom_result=device.device_send_command_match(command,20,"GPSENABLE(.*)0x01&&(.*)GPSLPM(.*)0x01&&(.*)IPV6ENABLE	(.*)0x01&&(.*)UIM2ENABLE	(.*)0x01&&(.*)SIMLPM(.*)0x01&&(.*)USBSERIALENABLE(.*)0x01&&(.*)SINGLEAPNSWITCH(.*)0x01")
+            custom_result = device.device_send_command_match(command,20,"GPSENABLE(.*)0x01&&(.*)GPSLPM(.*)0x01&&(.*)IPV6ENABLE	(.*)0x01&&(.*)UIM2ENABLE	(.*)0x01&&(.*)SIMLPM(.*)0x01&&(.*)USBSERIALENABLE(.*)0x01&&(.*)SINGLEAPNSWITCH(.*)0x01")
             logger.info("[Custom Check] %s" % (device.target_response))
-            print device.target_response
+            #print device.target_response
 
         elif type =="SPRINT":
             logger.info("[Dialer_Custom Check] %s Testing start..." % (type))
@@ -277,7 +283,11 @@ def Dialer_Custom_Check(device):
             command = "debug line cellular %s atcmd \"at!custom?\"" % (cellular_index)
             custom_result = device.device_send_command_match(command, 20,"GPSENABLE(.*)0x01&&(.*)GPSLPM(.*)0x01&&(.*)IPV6ENABLE	(.*)0x01&&(.*)UIM2ENABLE	(.*)0x01&&(.*)SIMLPM(.*)0x01&&(.*)USBSERIALENABLE(.*)0x01")
             logger.info("[Custom Check] %s" % (device.target_response))
+        else:
+            logger.info("[Dialer_Custom Check] %s not in test script." % (type))
+            custom_result = False
 
+    logger.info("[Dialer_Custom Check] %s_custom setting is %s..." % (type, custom_result))
     return custom_result
 
 def Server_set_dialer(device):
@@ -515,20 +525,21 @@ if __name__ == '__main__':
 
 
 
-        set_result = Dialer_system_check(server_device)
-        if set_result:set_result = Dialer_Iccid_info(server_device)
+        set_result =  Dialer_system_check(server_device)
+        '''if set_result:set_result = Dialer_Iccid_info(server_device)
         if set_result:set_result = Server_set_dialer(server_device)
         logger.info("[DUT]Server show the configuration ...")
         logger.info("[DUT] %s" % (server_device.device_get_running_config()))
         if set_result: set_result = Dialer_RRC_Check(server_device) #Dialer should be on 4G mode, 3G not support RRC state.
         if set_result: set_result = Dialer_Simlot_Change(server_device)
 
-        logger.info("[DUT]Celluar Basic Test Finished, result is %s"%(set_result))
+        logger.info("[DUT]Celluar Basic Test Finished, result is %s"%(set_result))'''
         if set_result:
             if "STS" in Server_Type:
                 set_result = Dialer_firmware_switch(server_device)
 
+    logger.info("[DUT]Celluar Test Finished as %s" % (set_result))
     server_device.device_send_command("reboot")
-    logger.info("[DUT]Celluar Test Finished as %s" %(set_result))
+
     #sqamail = sqa_mail()
     #sqamail.send_mail("lance.chien@lileesystems.com", "Celluar Test %s"%(set_result), u"%s" %(set_result))
