@@ -526,14 +526,14 @@ if __name__ == '__main__':
 
 
         set_result =  Dialer_system_check(server_device)
-        '''if set_result:set_result = Dialer_Iccid_info(server_device)
+        if set_result:set_result = Dialer_Iccid_info(server_device)
         if set_result:set_result = Server_set_dialer(server_device)
         logger.info("[DUT]Server show the configuration ...")
         logger.info("[DUT] %s" % (server_device.device_get_running_config()))
         if set_result: set_result = Dialer_RRC_Check(server_device) #Dialer should be on 4G mode, 3G not support RRC state.
         if set_result: set_result = Dialer_Simlot_Change(server_device)
 
-        logger.info("[DUT]Celluar Basic Test Finished, result is %s"%(set_result))'''
+        logger.info("[DUT]Celluar Basic Test Finished, result is %s"%(set_result))
         if set_result:
             if "STS" in Server_Type:
                 set_result = Dialer_firmware_switch(server_device)
