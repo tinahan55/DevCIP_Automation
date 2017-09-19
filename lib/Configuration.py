@@ -205,11 +205,26 @@ class Function(object):
 
         return commandlist
 
+
     def get_policy_route(self,classifier_index, table_index,priority):
         commandlist = list()
         commandlist.append("config policy-route classifier %s table %s priority %s" % (classifier_index, table_index, priority))
 
         return commandlist
+    def get_tunnel(self, device_type, threading_mode,tunnel_mode, interface, mobility_controller, controller_ip):
+        cmdlist = list()
+        cmdlist.append("config mobility type layer-2") # This command is default value for LileeOS
+        cmdlist.append("config mobility mode %s" % (tunnel_mode))  # Look udp mode is default value for LileeOS
+        if device_type == "lmc":
+            if threading_mode == "performance":
+                cmdlist.append("config mobility performance cpu-spec enable")
+            # commandlist.append("config mobility bridge interface eth4 vlan-access %s"%(interface))
+        else:
+            cmdlist.append("config mobility uplink interface %s controller %s" % (interface, controller_ip))
+            if mobility_controller != "":
+                cmdlist.append("config host mobility-controller %s" % (mobility_controller))
+
+        return cmdlist
 
 
 class WifiProfile(object):

@@ -57,7 +57,7 @@ class Device_Tool(object):
     def __device_check_mode(self,command):
         if self.device_set_lilee_mode == False:
             command_mode = 'shell'
-            bashcommandlist = ["ifconfig","ping"]
+            bashcommandlist = ["ifconfig","ping","ip"] #Add "ip" for ip table modifying
             filter_result =  list(lileecommand for lileecommand in bashcommandlist if lileecommand in command)
             if len(filter_result) >0:
                 command_mode = "shell"
@@ -156,7 +156,7 @@ class Device_Tool(object):
         runningconfig = self.device_get_running_config()
         for config in configlist:
             if config not in runningconfig:
-                if 'enable' in config or 'disable' in config or 'controller' in config:
+                if 'enable' in config or 'disable' in config or 'controller' in config or 'ghz' in config:
                     timeout = 30
                 sendresult = self.device_send_command(config,timeout)
                 if sendresult == False:
