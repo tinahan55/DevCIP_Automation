@@ -174,8 +174,8 @@ if __name__ == '__main__':
     server_sta_login_password = "admin"
 
     if len(sys.argv) > 2:
-        connect_type = sys.argv[1]
-        AP_Info = sys.argv[2] #telnet_10.2.66.50_2040_10.2.66.61_admin_admin =>connecttype_ip_port_maintenceip_username_password
+        #connect_type = sys.argv[1]
+        AP_Info = sys.argv[1] #telnet_10.2.66.50_2040_10.2.66.61_admin_admin =>connecttype_ip_port_maintenceip_username_password
         ap_connect_type = AP_Info.split("_")[0]
         ap_ip = AP_Info.split("_")[1]
         ap_port = AP_Info.split("_")[2]
@@ -183,8 +183,8 @@ if __name__ == '__main__':
         ap_login_user = AP_Info.split("_")[4]
         ap_login_password = AP_Info.split("_")[5]
 
-        STA_Info = sys.argv[3]#telnet_10.2.66.50_2035_admin_admin =>connecttype_ip_port_maintenceip_username_password
-        sta_connect_type = STA_Info.split("_")[0]
+        STA_Info = sys.argv[2]#telnet_10.2.66.50_2035_admin_admin =>connecttype_ip_port_maintenceip_username_password
+        #sta_connect_type = STA_Info.split("_")[0]
         sta_client_ip = STA_Info.split("_")[1]
         sta_client_port = STA_Info.split("_")[2]
         sta_maintenance_ip = STA_Info.split("_")[3]
@@ -227,6 +227,7 @@ if __name__ == '__main__':
     wlan0_index = get_wifi_wlan0_index()
     wlan1_index = get_wifi_wlan1_index()
 
+    logger.info("Wifi Pretesting")
 #open security
     set_ap(ap_device, "2.4g", "open", "1")
     set_sta(sta_device, "2.4g", "open", "1")
