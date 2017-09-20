@@ -69,7 +69,6 @@ class Device_Tool(object):
         else:
             self.device_set_lilee_mode = False
             return 'lilee'
-        print command_mode + ":"+ command
         return command_mode
 
     def _escape_ansi(self,line):
@@ -80,7 +79,6 @@ class Device_Tool(object):
         commandresult = False
         commandresponse = ""
         command_mode =self.__device_check_mode(command)
-        print command_mode
         if self.connecttype == "telnet":
             if self.target!=None:
                 commandresult = self.target.send_command(command,timeout,command_mode)
@@ -159,12 +157,8 @@ class Device_Tool(object):
         for config in configlist:
             if config not in runningconfig:
                 if 'enable' in config or 'disable' in config or 'controller' in config or 'ghz' in config: #config interface wlan
-                    print config
-                    print "Sleep 30s"
                     timeout = 30
                 sendresult = self.device_send_command(config,timeout)
-                print "Result: %s" % (self.target_response)
-                #print self.target_response
                 if sendresult == False:
                     print 'set fail:'+ self.target_response
                     print 'set again:'+config
