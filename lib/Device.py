@@ -152,7 +152,7 @@ class Device_Tool(object):
         return configlist
 
     def device_set_configs(self,configlist):
-        timeout = 20
+        timeout = 15
         runningconfig = self.device_get_running_config()
         for config in configlist:
             if config not in runningconfig:

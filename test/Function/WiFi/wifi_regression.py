@@ -79,7 +79,7 @@ def set_ap(device, operating_mode, security, wpa_version):
         configlist.extend(interface.get_wifi_interface(wlan0_index, profile_name, wlan0_mode, wlan0_ip_mode, operating_mode, wlan0_ip_address, wlan0_ip_netmask))
 
         device.device_set_configs(configlist)
-        time.sleep(60)
+        time.sleep(90)
         logger.info("config AP %s mode with %s security done!" %(operating_mode, security))
     #check ap profile and interface
         checkitem = "Check_Wifi_AP_Profile_Interface"
@@ -139,7 +139,7 @@ def set_sta(device, operating_mode, security, wpa_version):
         configlist.extend(interface.get_wifi_interface(wlan1_index, profile_name, wlan1_mode, wlan1_ip_mode, operating_mode, wlan1_ip_address, wlan1_ip_netmask))
 
         device.device_set_configs(configlist)
-        time.sleep(60)
+        time.sleep(90)
         logger.info("config STA %s mode with %s security done!" %(operating_mode, security))
     #check connection between AP and STA
         checkitem = "Check_Wifi_STA_Profile_Interface_Connection"

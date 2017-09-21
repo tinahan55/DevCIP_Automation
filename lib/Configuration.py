@@ -246,9 +246,9 @@ class WifiProfile(object):
 
     def get_wificonfig_open(self,mode,profile_name,ssid):
         commandlist = list()
-        commandlist.append("create wifi-profile \"%s\"" % (profile_name))
-        commandlist.append("config wifi-profile \"%s\" ssid \"%s\"" % (profile_name, ssid))
-        commandlist.append("config wifi-profile \"%s\" authentication open" % (profile_name))
+        commandlist.append("create wifi-profile %s" % (profile_name))
+        commandlist.append("config wifi-profile %s ssid %s" % (profile_name, ssid))
+        commandlist.append("config wifi-profile %s authentication open" % (profile_name))
         return commandlist
 
     def get_wificonfig_wpa_psk(self,mode,profile_name,ssid,wpa_version,wpa_key):
