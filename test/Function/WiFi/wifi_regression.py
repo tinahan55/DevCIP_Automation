@@ -5,6 +5,7 @@ from lib.Configuration import *
 from lib.Tool import *
 import logging
 import os
+import sys
 from time import gmtime, strftime
 
 AP_Server_Type = ""
@@ -58,34 +59,40 @@ def set_ap(device, operating_mode, security, wpa_version):
     wlan0_ip_address = "172.10.88.12"
     wlan0_ip_netmask = "255.255.255.0"
 #config wifi ap profile
-    profile = WifiProfile("wifi_ap_profile")
-    if security == "open":
-        configlist.extend(profile.get_wificonfig_open(wlan0_mode, profile_name, ssid_name))
-    elif security == "wpa":
-        configlist.extend(profile.get_wificonfig_wpa_psk(wlan0_mode, profile_name, ssid_name, wpa_version, wpa_key))
+    logger.info("start config ap with %s mode and %s security" %(operating_mode, security))
+    if (device.device_type == "lms" or device.device_type == "dts") and operating_mode == "ac":
+        print "Device does not support AC-mode! Pass config!"
+        time.sleep(5)
+        return
     else:
-        eap_type = security
-        configlist.extend(profile.get_wificonfig_eap(wlan0_mode, profile_name, ssid_name, wpa_version, eap_type))
+        profile = WifiProfile("wifi_ap_profile")
+        if security == "open":
+            configlist.extend(profile.get_wificonfig_open(wlan0_mode, profile_name, ssid_name))
+        elif security == "wpa":
+            configlist.extend(profile.get_wificonfig_wpa_psk(wlan0_mode, profile_name, ssid_name, wpa_version, wpa_key))
+        else:
+            eap_type = security
+            configlist.extend(profile.get_wificonfig_eap(wlan0_mode, profile_name, ssid_name, wpa_version, eap_type))
 
-#config wifi ap interface
-    interface = Interface("wifi_ap_interface")
-    configlist.extend(interface.get_wifi_interface(wlan0_index, profile_name, wlan0_mode, wlan0_ip_mode, operating_mode, wlan0_ip_address, wlan0_ip_netmask))
+    #config wifi ap interface
+        interface = Interface("wifi_ap_interface")
+        configlist.extend(interface.get_wifi_interface(wlan0_index, profile_name, wlan0_mode, wlan0_ip_mode, operating_mode, wlan0_ip_address, wlan0_ip_netmask))
 
-    device.device_set_configs(configlist)
-    time.sleep(90)
-    logger.info("AP %s mode with %s security done!" %(operating_mode, security))
-#check ap profile and interface
-    checkitem = "Check_Wifi_AP_Profile_Interface"
-    logger.info("[%s]Starting" % (checkitem))
-    checkcommandlist = ["show interface all", "show wifi-profile %s" %(security)]
-    checkitemlist = ["wlan %s&&up" % (wlan0_index), "Profile Name : open&&SSID : open"]
-    for index, value in enumerate(checkcommandlist):
-        checkmatch = checkitemlist[index]
-        result = device_check_info(logger, device, checkitem, value, checkmatch)
-        time.sleep(10)
-        if result == False:
-            return result
-    return result
+        device.device_set_configs(configlist)
+        time.sleep(60)
+        logger.info("config AP %s mode with %s security done!" %(operating_mode, security))
+    #check ap profile and interface
+        checkitem = "Check_Wifi_AP_Profile_Interface"
+        logger.info("[%s]Starting" % (checkitem))
+        checkcommandlist = ["show interface all", "show wifi-profile %s" %(security)]
+        checkitemlist = ["wlan %s&&up" % (wlan0_index), "Profile Name : %s&&SSID : %s" %(profile_name, ssid_name)]
+        for index, value in enumerate(checkcommandlist):
+            checkmatch = checkitemlist[index]
+            result = device_check_info(logger, device, checkitem, value, checkmatch)
+            time.sleep(10)
+            if result == False:
+                return result
+    return
 
 def set_sta(device, operating_mode, security, wpa_version):
 #parameters
@@ -102,44 +109,50 @@ def set_sta(device, operating_mode, security, wpa_version):
     client_link = "http://10.2.10.189/Tmp_Files/client.pem"
     test_ap_ip = "172.10.88.12"
 #config wifi sta profile
-    profile = WifiProfile("wifi_sta_profile")
-    if security == "open":
-        configlist.extend(profile.get_wificonfig_open(wlan1_mode, profile_name, ssid_name))
-    elif security == "wpa":
-        configlist.extend(profile.get_wificonfig_wpa_psk(wlan1_mode, profile_name, ssid_name, wpa_version, wpa_key))
+    logger.info("start config sta with %s mode and %s security" %(operating_mode, security))
+    if (device.device_type == "lms" or device.device_type == "dts") and operating_mode == "ac":
+        print "Device does not support AC-mode! Pass config!"
+        time.sleep(5)
+        return
     else:
-        eap_type = security
-        checkresult = device.device_send_command_match("show certificate", 5, "ca.pem")
-        if checkresult == False:
-            device.device_send_command("update certificate %s" % (ca_cert_link))
-            time.sleep(10)
-            device.device_send_command("update certificate %s" % (client_cert_link))
-            time.sleep(10)
-            device.device_send_command("update certificate %s" % (client_link))
-            time.sleep(10)
+        profile = WifiProfile("wifi_sta_profile")
+        if security == "open":
+            configlist.extend(profile.get_wificonfig_open(wlan1_mode, profile_name, ssid_name))
+        elif security == "wpa":
+            configlist.extend(profile.get_wificonfig_wpa_psk(wlan1_mode, profile_name, ssid_name, wpa_version, wpa_key))
         else:
-            print "no need to upgrade certificate files!"
-        configlist.extend(profile.get_wificonfig_eap(wlan1_mode, profile_name, ssid_name, wpa_version, eap_type))
+            eap_type = security
+            checkresult = device.device_send_command_match("show certificate", 5, "ca.pem")
+            if checkresult == False:
+                device.device_send_command("update certificate %s" % (ca_cert_link))
+                time.sleep(10)
+                device.device_send_command("update certificate %s" % (client_cert_link))
+                time.sleep(10)
+                device.device_send_command("update certificate %s" % (client_link))
+                time.sleep(10)
+            else:
+                print "no need to upgrade certificate files!"
+            configlist.extend(profile.get_wificonfig_eap(wlan1_mode, profile_name, ssid_name, wpa_version, eap_type))
 
-#config sta interface
-    interface = Interface("wifi_sta_interface")
-    configlist.extend(interface.get_wifi_interface(wlan1_index, profile_name, wlan1_mode, wlan1_ip_mode, operating_mode, wlan1_ip_address, wlan1_ip_netmask))
+    #config sta interface
+        interface = Interface("wifi_sta_interface")
+        configlist.extend(interface.get_wifi_interface(wlan1_index, profile_name, wlan1_mode, wlan1_ip_mode, operating_mode, wlan1_ip_address, wlan1_ip_netmask))
 
-    device.device_set_configs(configlist)
-    time.sleep(90)
-    logger.info("STA %s mode with %s security done!" %(operating_mode, security))
-#check connection between AP and STA
-    checkitem = "Check_Wifi_STA_Profile_Interface_Connection"
-    logger.info("[%s]Starting" % (checkitem))
-    checkcommandlist = ["show wifi-profile %s" % (profile_name), "show interface all", "ping -I 172.10.88.13 -c 5 %s" %(test_ap_ip)]
-    checkitemlist = ["Profile Name : %s && SSID : %s" % (profile_name, ssid_name), "wlan %s && up" % (wlan1_index),"64 bytes from %s: icmp_seq=5 (.*)" % (test_ap_ip)]
-    for index, value in enumerate(checkcommandlist):
-        checkmatch = checkitemlist[index]
-        result = device_check_info(logger, device, checkitem, value, checkmatch)
-        time.sleep(10)
-        if result == False:
-            return result
-    return result
+        device.device_set_configs(configlist)
+        time.sleep(60)
+        logger.info("config STA %s mode with %s security done!" %(operating_mode, security))
+    #check connection between AP and STA
+        checkitem = "Check_Wifi_STA_Profile_Interface_Connection"
+        logger.info("[%s]Starting" % (checkitem))
+        checkcommandlist = ["show wifi-profile %s" % (profile_name), "show interface all", "ping -I 172.10.88.13 -c 5 %s" %(test_ap_ip)]
+        checkitemlist = ["Profile Name : %s && SSID : %s" % (profile_name, ssid_name), "wlan %s && up" % (wlan1_index),"64 bytes from %s: icmp_seq=5 (.*)" % (test_ap_ip)]
+        for index, value in enumerate(checkcommandlist):
+            checkmatch = checkitemlist[index]
+            result = device_check_info(logger, device, checkitem, value, checkmatch)
+            time.sleep(10)
+            if result == False:
+                return result
+        return result
 
 def set_log(filename, loggername):
     logpath = os.path.join(os.getcwd(), 'log')
@@ -161,11 +174,14 @@ def set_log(filename, loggername):
 
 if __name__ == '__main__':
     connecttype = "telnet"
-    #server_ap_ip = "10.2.66.50"     #R11-LMS-1
-    server_ap_ip = "10.2.11.7"
-    server_sta_ip = "10.2.11.4"    #R11-DTS-1
-    server_ap_port = 4006
-    server_sta_port = 3009
+    server_ap_ip = "10.2.66.50"     #R11-LMS-1
+    #server_ap_ip = "10.2.11.7"
+    server_sta_ip = "10.2.66.50"    #R11-DTS-1
+    #server_sta_ip = "10.2.11.4"
+    server_ap_port = 2037
+    #server_ap_port = 4006
+    server_sta_port = 2035
+    #server_sta_port = 3009
     server_ap_maintenance_ip = "10.2.11.154"
     server_sta_maintenance_ip = "10.2.9.123"
     server_ap_login_user = "admin"
@@ -231,8 +247,8 @@ if __name__ == '__main__':
 #open security
     set_ap(ap_device, "2.4g", "open", "1")
     set_sta(sta_device, "2.4g", "open", "1")
-    set_ap(ap_device, "5g", "open", "1")
-    set_sta(sta_device, "5g", "open", "1")
+    #set_ap(ap_device, "5g", "open", "1")
+    #set_sta(sta_device, "5g", "open", "1")
     set_ap(ap_device, "ac", "open", "1")
     set_sta(sta_device, "ac", "open", "1")
 #wpa-psk security
@@ -256,6 +272,7 @@ if __name__ == '__main__':
     set_sta(sta_device, "5g", "tls", "auto")
     set_ap(ap_device, "ac", "tls", "2")
     set_sta(sta_device, "ac", "tls", "2")
+
 
     logger.info("WiFi Test Finished")
     #ap_device.device_send_command("reboot")

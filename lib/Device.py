@@ -152,12 +152,12 @@ class Device_Tool(object):
         return configlist
 
     def device_set_configs(self,configlist):
-        timeout = 5
+        timeout = 20
         runningconfig = self.device_get_running_config()
         for config in configlist:
             if config not in runningconfig:
-                if 'enable' in config or 'disable' in config or 'controller' in config or 'ghz' in config: #config interface wlan
-                    timeout = 30
+                if 'enable' in config or 'disable' in config or 'controller' in config or '-ghz' in config or 'ac-mode' in config: #config interface wlan
+                    timeout = 120
                 sendresult = self.device_send_command(config,timeout)
                 if sendresult == False:
                     print 'set fail:'+ self.target_response
