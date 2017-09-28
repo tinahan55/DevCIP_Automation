@@ -57,7 +57,7 @@ class Device_Tool(object):
     def __device_check_mode(self,command):
         if self.device_set_lilee_mode == False:
             command_mode = 'shell'
-            bashcommandlist = ["ifconfig","ping"]
+            bashcommandlist = ["ifconfig","ping","ip route"] #Add "ip" for ip table modifying
             filter_result =  list(lileecommand for lileecommand in bashcommandlist if lileecommand in command)
             if len(filter_result) >0:
                 command_mode = "shell"
@@ -152,12 +152,12 @@ class Device_Tool(object):
         return configlist
 
     def device_set_configs(self,configlist):
-        timeout = 5
+        timeout = 15
         runningconfig = self.device_get_running_config()
         for config in configlist:
             if config not in runningconfig:
-                if 'enable' in config or 'disable' in config or 'controller' in config:
-                    timeout = 30
+                if 'enable' in config or 'disable' in config or 'controller' in config or '-ghz' in config or 'ac-mode' in config: #config interface wlan
+                    timeout = 120
                 sendresult = self.device_send_command(config,timeout)
                 if sendresult == False:
                     print 'set fail:'+ self.target_response

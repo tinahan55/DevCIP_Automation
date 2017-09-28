@@ -37,7 +37,7 @@ class Interface(object):
         commandlist.append("config interface dialer %s enable"%(dialer_index))
         return commandlist
 
-    def get_wifi_interface(self,wifi_index,profile_name,wifi_mode,ip_mode,ipaddress = "192.168.11.1",netmask="255.255.255.0"):
+    def get_wifi_interface(self,wifi_index,profile_name,wifi_mode,ip_mode,wifi_operating_mode,ipaddress,netmask):
         commandlist = list()
         commandlist.append("config add interface wlan %s %s"%(wifi_index,wifi_mode))
         commandlist.append("config interface wlan %s profile \"%s\""%(wifi_index,profile_name))
@@ -45,6 +45,15 @@ class Interface(object):
             commandlist.append("config interface wlan %s ip address %s netmask %s"%(wifi_index,ipaddress,netmask))
         elif ip_mode =="dhcp":
             commandlist.append("config interface wlan %s ip address dhcp"%(wifi_index))
+        #config wifi operating mode (2.4g/5g/ac/auto)
+        if wifi_operating_mode == "2.4g":
+            commandlist.append("config interface wlan %s mode 2.4-ghz" %(wifi_index))
+        elif wifi_operating_mode == "5g":
+            commandlist.append("config interface wlan %s mode 5-ghz" %(wifi_index))
+        elif wifi_operating_mode == "ac":
+            commandlist.append("config interface wlan %s mode ac-mode" %(wifi_index))
+        elif wifi_operating_mode == "auto":
+            commandlist.append("config interface wlan %s mode auto" %(wifi_index))
         commandlist.append("config interface wlan %s enable"%(wifi_index))
         return commandlist
 
@@ -101,11 +110,11 @@ class Function(object):
         return commandlist
 
 
-    def get_dhcp_pool(self, pool_name, pool_start_ip, pool_end_ip, netmask, default_gateway):
+    def get_dhcp_pool(self, pool_name, pool_start_ip, pool_end_ip, pool_netmask, default_gateway):
         commandlist = list()
         commandlist.append("config add dhcp-pool \"%s\""%(pool_name))
         commandlist.append("config dhcp-pool \"%s\" add ip-address-range from %s to %s"%(pool_name, pool_start_ip, pool_end_ip))
-        commandlist.append("config dhcp-pool \"%s\" netmask %s"%(pool_name, netmask))
+        commandlist.append("config dhcp-pool \"%s\" netmask %s"%(pool_name, pool_netmask))
         commandlist.append("config dhcp-pool \"%s\" ip default-gateway %s"%(pool_name, default_gateway))
         return commandlist
 
@@ -196,13 +205,102 @@ class Function(object):
 
         return commandlist
 
+
     def get_policy_route(self,classifier_index, table_index,priority):
         commandlist = list()
         commandlist.append("config policy-route classifier %s table %s priority %s" % (classifier_index, table_index, priority))
 
         return commandlist
+    def get_tunnel(self, device_type, threading_mode,tunnel_mode, interface, mobility_controller, controller_ip):
+        cmdlist = list()
+        cmdlist.append("config mobility type layer-2") # This command is default value for LileeOS
+        cmdlist.append("config mobility mode %s" % (tunnel_mode))  # Look udp mode is default value for LileeOS
+        if device_type == "lmc":
+            if threading_mode == "performance":
+                cmdlist.append("config mobility performance cpu-spec enable")
+            # commandlist.append("config mobility bridge interface eth4 vlan-access %s"%(interface))
+        else:
+            cmdlist.append("config mobility uplink interface %s controller %s" % (interface, controller_ip))
+            if mobility_controller != "":
+                cmdlist.append("config host mobility-controller %s" % (mobility_controller))
+
+        return cmdlist
 
 
+class WifiProfile(object):
+    def __init__(self,radius_host_ip="10.2.11.44",auth_port="1812",acct_port="1813",auth_key="LileeSystems",acct_key="LileeSystems",eap_id= "lance",eap_pwd= "lance0124",eap_tls_id="lancewei124@gmail.com",ca_cert="ca.pem",client_cert="client.pem",pri_key="client.p12",pri_pwd="whatever"):
+        #self.mode = mode
+        #self.auth_type = auth_type
+        self.radius_host_ip = radius_host_ip
+        self.auth_port = auth_port
+        self.acct_port = acct_port
+        self.auth_key = auth_key
+        self.acct_key = acct_key
+        self.eap_id = eap_id
+        self.eap_pwd = eap_pwd
+        self.eap_tls_id = eap_tls_id
+        self.ca_cert = ca_cert
+        self.client_cert = client_cert
+        self.pri_key = pri_key
+        self.pri_pwd = pri_pwd
+
+    def get_wificonfig_open(self,mode,profile_name,ssid):
+        commandlist = list()
+        commandlist.append("create wifi-profile %s" % (profile_name))
+        commandlist.append("config wifi-profile %s ssid %s" % (profile_name, ssid))
+        commandlist.append("config wifi-profile %s authentication open" % (profile_name))
+        return commandlist
+
+    def get_wificonfig_wpa_psk(self,mode,profile_name,ssid,wpa_version,wpa_key):
+        commandlist = list()
+        commandlist.append("create wifi-profile \"%s\"" % (profile_name))
+        commandlist.append("config wifi-profile \"%s\" ssid \"%s\"" % (profile_name, ssid))
+        commandlist.append("config wifi-profile \"%s\" authentication key-management wpa-psk" % (profile_name))
+        if mode == "ap":
+            commandlist.append("config wifi-profile \"%s\" authentication wpa-version \"%s\"" % (profile_name,wpa_version))
+            commandlist.append("config wifi-profile \"%s\" authentication wpa-psk ascii \"%s\"" % (profile_name,wpa_key))
+        else:
+            commandlist.append("config wifi-profile \"%s\" authentication wpa-version \"%s\"" % (profile_name, wpa_version))
+            commandlist.append("config wifi-profile \"%s\" authentication wpa-psk ascii \"%s\"" % (profile_name, wpa_key))
+        return commandlist
+
+    def get_wificonfig_eap(self,mode,profile_name,ssid,wpa_version,eap_type):
+        #radius_host_ip = self.radius_host_ip
+        radius_host_ip = "10.2.11.44"
+        auth_port = self.auth_port
+        acct_port = self.acct_port
+        auth_key = self.auth_key
+        acct_key = self.acct_key
+        eap_id = self.eap_id
+        eap_pwd = self.eap_pwd
+        eap_tls_id = self.eap_tls_id
+        ca_cert = self.ca_cert
+        client_cert = self.client_cert
+        pri_key = self.pri_key
+        pri_pwd = self.pri_pwd
+
+        commandlist = list()
+        commandlist.append("create wifi-profile \"%s\"" % (profile_name))
+        commandlist.append("config wifi-profile \"%s\" ssid \"%s\"" % (profile_name, ssid))
+        commandlist.append("config wifi-profile \"%s\" authentication key-management wpa-eap" % (profile_name))
+        if mode == "ap":
+            commandlist.append("config wifi-profile \"%s\" authentication wpa-version \"%s\"" % (profile_name, wpa_version))
+            commandlist.append("config wifi-profile \"%s\" radius auth-server host \"%s\" port \"%s\" key \"%s\"" % (profile_name, radius_host_ip, auth_port, auth_key))
+            #commandlist.append("config wifi-profile %s radius auth-server host %s port %s key %s" % (profile_name, radius_host_ip, auth_port, auth_key))
+            commandlist.append("config wifi-profile \"%s\" radius acct-server host \"%s\" port \"%s\" key \"%s\"" % (profile_name, radius_host_ip, acct_port, acct_key))
+            #commandlist.append("config wifi-profile %s radius acct-server host %s port %s key %s" % (profile_name, radius_host_ip, acct_port, acct_key))
+        else:
+            if eap_type == "peap":
+                commandlist.append("config wifi-profile \"%s\" authentication sta-eap type peap" % (profile_name))
+                commandlist.append("config wifi-profile \"%s\" authentication eap-identity \"%s\"" % (profile_name, eap_id))
+                commandlist.append("config wifi-profile \"%s\" authentication eap-password \"%s\"" % (profile_name, eap_pwd))
+            else:
+                commandlist.append("config wifi-profile \"%s\" authentication sta-eap type tls" % (profile_name))
+                commandlist.append("config wifi-profile \"%s\" authentication eap-identity \"%s\"" % (profile_name, eap_tls_id))
+                commandlist.append("config wifi-profile \"%s\" authentication ca-certificate filename \"%s\"" % (profile_name, ca_cert))
+                commandlist.append("config wifi-profile \"%s\" authentication client-certificate filename  \"%s\"" % (profile_name, client_cert))
+                commandlist.append("config wifi-profile \"%s\" authentication private-key filename \"%s\" password %s" % (profile_name, pri_key, pri_pwd))
+        return commandlist
 
 
 
