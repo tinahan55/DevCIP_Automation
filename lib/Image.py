@@ -134,7 +134,7 @@ class ImageTool(object):
             IF_Udate = False
         else:
             Check_Build = "Alternative image: %s"%(build_version)
-            result = self.device.device_send_command_match(Check_Command,10,Check_Build)
+            result = self.device.device_send_command_match(Check_Command,15,Check_Build)
             self.logger.info("check_rack_image Alternative (%s):%s (response)%s"%(Check_Build,result,self.device.target_response))
             if result == True:
                 cmdresult = self.device.device_send_command("config boot system-image " + build_version)
@@ -159,13 +159,15 @@ class ImageTool(object):
         self.logger.info("[%s]udate devicet starting.."%(self.device.device_type))
         updatecmd = "update boot system-image %s"%(pathFW)
         result = False
-        download_match = "download"
-        if "LMC" not in self.device.device_product_name:
-            commandlist = [updatecmd,"yes"]
-            resultlist = ["disk update","download"]
-            result = self.device.device_send_multip_command_match(commandlist,20,resultlist)
-        else:
-            result = self.device.device_send_command_match(updatecmd,20,"downloaded")
+        download_match = "Verifying"
+        #if "LMC" not in self.device.device_product_name:
+        commandlist = [updatecmd,"yes"]
+        resultlist = ["disk update","update"]
+        result = self.device.device_send_multip_command_match(commandlist,20,resultlist)
+        if result ==False:
+            result = self.device.device_send_command_match(updatecmd,20,"update")
+
+        #else:
         time.sleep(5)
         if result == True:
             self.logger.info("start to download to update image")
@@ -188,6 +190,7 @@ class ImageTool(object):
 
         else:
             self.logger.error("[upgrade]fail:%s",self.device.target_response)
+            return False
 
         IF_Udate = self._check_device_image(update_build_image)
         if IF_Udate ==False:
@@ -195,21 +198,25 @@ class ImageTool(object):
         else:
             return False
 
-    def upgrade_device_image(self,maintain_interface,maintenance_ip_mode,maintenanceip,netmask):
+    def upgrade_device_image(self,maintain_interface_index,maintenance_ip_mode,maintenanceip,netmask):
+        upgraderesult = False
+        maintain_interface = "maintenance %s"%(maintain_interface_index)
+        if self.device.device_type =='lmc':
+            maintain_interface = "eth %s"%(maintain_interface_index)
 
         pingcommand ="ping -c5 %s"%(self.image_host_ip)
-        pingresult = "64 bytes from %s: icmp_seq=5"%(self.image_host_ip)
+        pingresult = "64 bytes from %s: icmp_seq=1 *"%(self.image_host_ip)
 
         if self.update_image_url_path!="" :
             IF_Udate = self._check_device_image(self.update_build_image)
             self.logger.info('[upgrade_device_image] check if need to update:%s'%(IF_Udate))
             if IF_Udate ==True:
-                    self.device.device_no_config()
                     pingresult = self.device.device_send_command_match(pingcommand,10,pingresult)
                     if pingresult != True:
+                        self.device.device_no_config()
                         self.logger.info('[upgrade_device_image][ping fail]set default config')
                         self._set_default_config(maintain_interface,maintenance_ip_mode,maintenanceip,netmask)
-                        time.sleep(15)
+                        time.sleep(20)
                         pingresult = self.device.device_send_command_match(pingcommand,10,pingresult)
                         if pingresult!=True:
                             self.logger.info('[upgrade_device_image][ping fail]start reboot')
@@ -219,7 +226,7 @@ class ImageTool(object):
                                 self.logger.info('[upgrade_device_image][after rebooting]set default config')
                                 self._set_default_config(maintain_interface,maintenance_ip_mode,maintenanceip,netmask)
                                 time.sleep(10)
-                                pingresult = self.device.device_send_command_match(pingcommand,2,pingresult)
+                                pingresult = self.device.device_send_command_match(pingcommand,10,pingresult)
                                 if pingresult ==True:
                                     self.logger.info("[upgrade_device_image]The image is the oldest one ,need to upgrade")
                                     upgraderesult = self._upgrade(self.update_image_url_path,self.update_build_image)
@@ -235,6 +242,8 @@ class ImageTool(object):
                         self.logger.info("[upgrade_device_image]The image is the oldest one ,need to upgrade")
                         upgraderesult = self._upgrade(self.update_image_url_path,self.update_build_image)
                         self.logger.info("[upgrade_device_image]upgrade result:%s"%(upgraderesult))
+            else:
+                upgraderesult =True
 
         else :
             self.logger.error( "Please choose new or target !!")
@@ -242,61 +251,53 @@ class ImageTool(object):
 
 if __name__ == '__main__':
     mainlogger = Log("Image_Tool","Image_Tool")
-    if len(sys.argv)>5:
+    image_server = '10.2.10.17_3'
+    image_info = '3.5_Target_15'
+    device_info = 'telnet_10.2.11.4_3005'
+    login_info = 'admin_admin'
+    maintain_info = 'static_10.2.11.146_255.255.252.0_0'
+
+    #maintain_info_list = ['10.2.11.146:0','10.2.11.144:0','10.2.11.161:0','10.2.11.141:0','10.2.11.142:0','10.2.11.134:0','10.2.11.137:0','10.2.11.182:0','10.2.11.181:0','10.2.11.71:0','10.2.11.81:1']
+    #device_ip_list = ['10.2.11.4','10.2.11.4','10.2.11.61','10.2.11.61','10.2.11.61','10.2.11.7','10.2.11.7','10.2.11.8','10.2.11.8','10.2.11.7','10.2.11.8']
+    #port_list = [3005,3003,2045,2036,2037,4004,4001,4002,4001,3001,3001]
+    # python Image.py 10.2.10.17_3 3.5_new_1 telnet_10.2.11.4_3005 admin_admin static_10.2.11.146_255.255.252.0_0
+    if len(sys.argv)>3:
         ## initial paramter
         image_server = sys.argv[1]
-        image_info =sys.argv[2].split("_")
-        device_info = sys.argv[3].split("_")
-        login_info = sys.argv[4].split("_")
-        maintain_info = sys.argv[5].split("_")
-        image_version = image_info[0]
-        image_mode = image_info[1]
-        image_build_no =image_info[2]
-        device_connect_type = device_info[0]
-        device_ip = device_info[1]
-        device_port = int(device_info[2])
-        username =login_info[0]
-        password =login_info[1]
-        maintain_interface =maintain_info[0]
-    image_server = '10.2.10.17'
-    image_version = '3.4'
-    image_mode = 'New'
-    device_connect_type ='telnet'
-    username ='admin'
-    password ='admin'
-    maintain_interface = 'maintenance 0'
-    maintain_info_list = ['10.2.11.144','10.2.11.161','10.2.11.141','10.2.11.142','10.2.11.249','10.2.11.250','10.2.11.137','10.2.11.137','10.2.11.182','10.2.11.181']
-    device_ip_list = ['10.2.11.4','10.2.11.61','10.2.11.61','10.2.11.61','10.2.11.58','10.2.11.58','10.2.11.7','10.2.11.7','10.2.11.8','10.2.11.8']
-    port_list = [3005,2045,2036,2037,2045,2041,4004,4001,4004,4001]
+        image_info =sys.argv[2]
+        device_info = sys.argv[3]
+        login_info = sys.argv[4]
+        maintain_info = sys.argv[5]
 
-    #maintain_info_list = ['10.2.11.144']
-    #device_ip_list = ['10.2.11.4']
-    #port_list = [3005]
+    image_server_ip = image_server.split('_')[0]
+    image_update_times = image_server.split('_')[1]
+    image_version = image_info.split('_')[0]
+    image_mode =  image_info.split('_')[1]
+    image_build_no =  image_info.split('_')[2]
+    device_connect_type = device_info.split('_')[0]
+    device_ip =  device_info.split('_')[1]
+    device_port=  device_info.split('_')[2]
+    username = login_info.split('_')[0]
+    password = login_info.split('_')[1]
+    maintaince_ip_mode = maintain_info.split('_')[0]
+    maintain_ip = maintain_info.split('_')[1]
+    maintain_netmask = maintain_info.split('_')[2]
+    maintain_interface_index = maintain_info.split('_')[3]
 
+    ## running image update
+    imagetool =ImageTool(device_ip,device_port,device_connect_type,username,password)
 
-    for index, device_ip in enumerate(device_ip_list):
+     ## get image download url
+    imagetool.set_image_host(image_server_ip,image_version,image_mode,image_build_no)
 
-        if "eth" not in maintain_interface:
-            maintain_interface = "maintenance 0"
-        else:
-            maintain_interface = maintain_interface.replace("eth","eth ")
-
-        maintaince_ip_mode ='static'
-        maintain_ip= maintain_info_list[index]
-        maintain_netmask ="255.255.252.0"
-        device_port = port_list[index]
-        image_build_no = 4
-
-
-        ## running image update
-        imagetool =ImageTool(device_ip,device_port,device_connect_type,username,password)
-
-        ## get image download url
-        imagetool.set_image_host(image_server,image_version,image_mode,image_build_no)
-
+    initial_times =1
+    while initial_times<int(image_update_times):
         ## Start to update image
-        imagetool.upgrade_device_image(maintain_interface,maintaince_ip_mode,maintain_ip,maintain_netmask)
-
+        update_result = imagetool.upgrade_device_image(maintain_interface_index,maintaince_ip_mode,maintain_ip,maintain_netmask)
+        if update_result==True:
+            break
+        else:
+            initial_times+=1
 
 
 
