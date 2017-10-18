@@ -8,6 +8,8 @@ import requests
 import websocket
 from datetime import datetime,timedelta
 from json import JSONEncoder
+import time
+
 
 class RequestParam:
     def __init__(self,asset_name,rev,method,post_data,request,expire,timer):
@@ -25,25 +27,25 @@ class ClientSocket(object):
     Times = 0
     cookie=""
 
-    def __init__(self,server_ip,device,cookie,times,logger):
+    def __init__(self,server_ip,device,cookie,wait_times,logger):
         self.server_ip = server_ip
         self.cookie = cookie
         self.device = device
         self.server_ip =server_ip
-        self.wait_times =times
+        self.initial_times =1
+        self.wait_times = wait_times
+
         self.gps_result = False
         self.logger = logger
 
     def on_message(self,ws, message):
-
-        if self.Count < self.wait_times:
             if message =="":
                 self.logger.info("[websocket]The device did not connect to lmc.")
             else:
                 if "gps" in message:
                     try:
                         decoded = json.loads(message)
-                        gps = decoded['respond']['reps'][2]['union']['gps']
+                        gps = decoded['respond']['reps'][6]['union']['gps']
                         longitude =  int(gps['longitude'])
                         latitude = int(gps['latitude'])
                         output = "[websocket][%s]gps:  longitude %s - latitude:%s , " % (self.Count,gps['longitude'],gps['latitude'])
@@ -55,13 +57,13 @@ class ClientSocket(object):
                             self.logger.info("[websocket][%s]The device did not get gps data from lmc.:%s"%(self.Count,message))
                     except Exception ,ex :
                         logger.error(str(ex)+":"+ message)
+                        self.gps_result = False
+                        if self.initial_times>self.wait_times:
+                            self.ws.close()
+                        else:
+                            time.sleep(1)
+                            self.wait_times +=1
 
-        else:
-            self.ws.close()
-
-
-
-            self.Count+=1
     def on_error(self,ws, error):
         print error
 
@@ -128,13 +130,21 @@ if __name__ == '__main__':
     logfilename = "WDU_GPS_Testing%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"WDU_GPS_Testing")
 
-    # Device Information
+    # device_info
     device_ip ="10.2.53.253"
     device_port = 22
     device_connect_mode ="ssh"
     device_username = "admin"
     device_password ="admin"
-    device_name ="SQA-Ricky-WDU"
+
+
+    #lmc_info
+    server_ip = "10.2.53.203"
+    server_port = 22
+    server_connect_mode ="ssh"
+    server_username = "admin"
+    server_password ="Lilee1234"
+
 
     # Power Server
     din_relay_ip = '10.2.53.199'
@@ -143,17 +153,70 @@ if __name__ == '__main__':
     din_relay_index = 2
     din_relay_cmd ="CCL"
 
+    #command_info
+    device_name ="SQA-Ricky-WDU"
+    build_version = "3.4"
+    method = "GET"
+    command = "statistic/report"
+    expired = 5
+    timer =10
 
+    #condition_info
     cycle_times = 200
-    serverip = "10.2.53.203"
-    powerCycle = powerCycle()
-    cookies =get_cookie_from_server(serverip,"admin","Lilee1234")
-    request_device = RequestParam(device_name,"3.4","GET","","statistic/report",5,10)
-    WaitTimes = 180
+    Wait_GPS_Times = 30
+    end_uptime=240
+
+    if len(sys.argv)>3:
+        device_info =sys.argv[1].split("_") #ssh_10.2.53.253_22_admin_admin
+        lmc_info = sys.argv[2].split("_") #ssh_10.2.53.203_22_admin_Lilee1234
+        din_server_info = sys.argv[3].split("_")#10.2.53.199_root_lilee1234_2_CCL
+        command_info = sys.argv[4].split("_") #SQA-Ricky-WDU_3.4_GET_statistic/report_5_10
+        condition_info =sys.argv[5].split("_")#200_30_240
+
+
+        # device_info
+        device_connect_mode = device_info[0]
+        device_ip = device_info[1]
+        device_port = device_info[2]
+        device_username = device_info[3]
+        device_password = device_info[4]
+
+         #lmc_info
+        server_connect_mode =lmc_info[0]
+        server_ip = lmc_info[1]
+        server_port = lmc_info[2]
+        server_username = lmc_info[3]
+        server_password = lmc_info[4]
+
+        # Power Server
+        din_relay_ip = din_server_info[0]
+        din_relay_user =din_server_info[1]
+        din_relay_pwd =din_server_info[2]
+        din_relay_index = din_server_info[3]
+        din_relay_cmd =din_server_info[4]
+
+        #command_info
+        device_name =command_info[0]
+        build_version = command_info[1]
+        method =command_info[2]
+        command = command_info[3]
+        expired = int(command_info[4])
+        timer =int(command_info[5])
+
+
+        #condition_info
+        cycle_times = int(condition_info[0])
+        Wait_GPS_Times = int(condition_info[1])
+        end_uptime=int(condition_info[2])
+
+
     pass_count = 0
     result_fail_count = 0
     respond_fail_count = 0
-    client = ClientSocket(serverip,request_device,cookies,WaitTimes,logger)
+    powerCycle = powerCycle()
+    cookies =get_cookie_from_server(server_ip,server_username,server_password)
+    request_device = RequestParam(device_name,build_version,method,"",command,expired,timer)
+    client = ClientSocket(server_ip,request_device,cookies,Wait_GPS_Times,logger)
     device =Device_Tool(device_ip,device_port,device_connect_mode,device_username,device_password,"WDU_GPS_Testing")
     if device:
         device.device_send_command("update terminal paging disable",10)
@@ -178,7 +241,7 @@ if __name__ == '__main__':
                 end_time =datetime.now()
                 total_wait_second = (end_time-start_time).total_seconds()
                 logger.info("[Check gps result]: total_second: %s , data result :%s"%(total_wait_second,client.gps_result))
-                if total_wait_second> 180 :
+                if total_wait_second> end_uptime :
                     respond_fail_count+=1
                 else:
                     if client.gps_result ==False:
