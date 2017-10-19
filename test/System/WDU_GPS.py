@@ -34,7 +34,6 @@ class ClientSocket(object):
         self.server_ip =server_ip
         self.initial_times =1
         self.wait_times = wait_times
-
         self.gps_result = False
         self.logger = logger
 
@@ -42,7 +41,7 @@ class ClientSocket(object):
             if message =="":
                 self.logger.info("[websocket]The device did not connect to lmc.")
             else:
-                if "gps" in message:
+                 if "gps" in message and self.initial_times< self.wait_times:
                     try:
                         decoded = json.loads(message)
                         gps = decoded['respond']['reps'][6]['union']['gps']
@@ -55,15 +54,15 @@ class ClientSocket(object):
                             self.ws.close()
                         else:
                             self.logger.info("[websocket][%s]The device did not get gps data from lmc.:%s"%(self.Count,message))
-                    except Exception ,ex :
-                        logger.error(str(ex)+":"+ message)
-                        self.gps_result = False
-                        if self.initial_times>self.wait_times:
-                            self.ws.close()
-                        else:
-                            time.sleep(1)
-                            self.wait_times +=1
+                            self.initial_times +=1
 
+
+                    except Exception ,ex :
+                        self.logger.error("message parsing error message:"+ message)
+                        self.initial_times +=1
+                 if self.initial_times> self.wait_times:
+                     self.gps_result=False
+                     self.ws.close()
     def on_error(self,ws, error):
         print error
 
@@ -77,7 +76,7 @@ class ClientSocket(object):
 
     def do_action(self):
         try:
-            self.Count=0
+            self.initial_times=1
             self.gps_result =False
             websocket.enableTrace(True)
             self.ws = websocket.WebSocketApp("ws://"+self.server_ip +"/app_gateway/socket",
@@ -131,7 +130,7 @@ if __name__ == '__main__':
     logger = set_log(logfilename,"WDU_GPS_Testing")
 
     # device_info
-    device_ip ="10.2.53.253"
+    device_ip ="10.2.53.150"
     device_port = 22
     device_connect_mode ="ssh"
     device_username = "admin"
@@ -154,7 +153,7 @@ if __name__ == '__main__':
     din_relay_cmd ="CCL"
 
     #command_info
-    device_name ="SQA-Ricky-WDU"
+    device_name ="SQA-LMS-WDU"
     build_version = "3.4"
     method = "GET"
     command = "statistic/report"
@@ -217,6 +216,7 @@ if __name__ == '__main__':
     cookies =get_cookie_from_server(server_ip,server_username,server_password)
     request_device = RequestParam(device_name,build_version,method,"",command,expired,timer)
     client = ClientSocket(server_ip,request_device,cookies,Wait_GPS_Times,logger)
+
     device =Device_Tool(device_ip,device_port,device_connect_mode,device_username,device_password,"WDU_GPS_Testing")
     if device:
         device.device_send_command("update terminal paging disable",10)
