@@ -317,10 +317,9 @@ if __name__ == '__main__':
         week = sys.argv[4]
         planname = sys.argv[5]
         result = sys.argv[6]
-        testrailinfo = sys.argv[7]
-        rack_group = sys.argv[8]
-        testrailusername = testrailinfo.split("_")[0]
-        testrailpassword = testrailinfo.split("_")[1]
+        testrailusername = sys.argv[7]
+        testrailpassword = sys.argv[8]
+        rack_group = sys.argv[9]
 
     testrailapi = TestRailAPI(user = testrailusername,password=testrailpassword)
     buildversion = "%s_build%s"%(runversion,buildid)
