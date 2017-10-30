@@ -148,6 +148,21 @@ class PassProfileJson:
         return valuelist
 
 
+    def get_config_from_file(self,filename,keyname):
+        configlist = list()
+        filepath =os.path.join(os.getcwd(), filename)
+        json_data = open(filepath).read()
+        d = json.loads(json_data)
+        for key, value in dict.items(d):
+            if key ==  keyname:
+                configlist = value.split("\n")
+        return configlist
+
+
+
+
+
+
 import smtplib
 from fluentmail import FluentMail,TLS
 import base64
@@ -172,7 +187,36 @@ class sqa_mail:
         except smtplib.SMTPException ,ex:
             print "send mail error:"+str(ex)
 
+'''
+mutlip thread for ssh connect
+'''
 
+from Queue import Queue
+from threading import Thread
+from SSHConsole import SSHConnect
+
+class multip_ssh_worker(Thread):
+    def __init__(self,queue):
+        Thread.__init__(self)
+        self.queue =queue
+        self.loggname ="worker"
+        self.logger = logging.getLogger('%s.multip_ssh_worker'%(self.loggname))
+
+
+    def run(self):
+        while True:
+            try:
+                Server_ip,Server_port,command,timeout,mode  = self.queue.get()
+                sshconnect = SSHConnect(Server_ip,Server_port,logname = self.loggname)
+                sshconnect.connect()
+                sshconnect.write_command(command,timeout,mode)
+                self.queue.task_done()
+            except Exception, e:
+              message = "Exception : "+ str(e)
+              logging.debug(message)
+              self.queue.task_done()
+
+logger = Log("worker","worker")
 
 if __name__ == '__main__':
 
@@ -186,9 +230,22 @@ if __name__ == '__main__':
     #for item in datalist:
     #    print item
     '''
+    server_ip = "192.168.10.1"
+    server_port =22
+    command = "ping 8.8.8.8"
+    timeout = 10
+    mode ="shell"
+    queue = Queue()
+    for x in range(6):
+        worker = multip_ssh_worker(queue)
+        worker.daemon =True
+        worker.start()
 
+    for x in range(6):
+        queue.put((server_ip,server_port,command,timeout,mode))
+    queue.join()
     # Mail testing
-    sqamail = sqa_mail()
-    sqamail.send_mail("ricky.wang@lileesystems.com","sqa mail testing",u"test 123 go")
+    #sqamail = sqa_mail()
+    #sqamail.send_mail("ricky.wang@lileesystems.com","sqa mail testing",u"test 123 go")
 
 
