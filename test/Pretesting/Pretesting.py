@@ -344,7 +344,7 @@ if __name__ == '__main__':
             device_type = "DTS"
 
         device.device_send_command("update terminal paging disable")
-        '''
+
         basic_dialer = Pretesting_Cellular(device)
 
         updateresult = testrail.update_test_result(project_name, test_plan, "Cellular", device_type, 7828,
@@ -360,7 +360,7 @@ if __name__ == '__main__':
         updateresult = testrail.update_test_result(project_name, test_plan, "Cellular", device_type, 15719,
                                                    testrail_buildversion, info_result, comment, True)
         logger.info("[Update_Pretesting_Dialer_Info]update_test_result : %s" % (updateresult))
-        '''
+
         wifi_result = Pretesting_WiFi(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 6889,
                                                    testrail_buildversion, wifi_result, comment, True)
@@ -370,7 +370,6 @@ if __name__ == '__main__':
                                                    testrail_buildversion, wifi_result, comment, True)
         logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))
 
-        '''
         poe_result = Pretesting_Poe(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "PoE", device_type, 6965,
                                                    testrail_buildversion, poe_result, comment, True)
@@ -393,4 +392,4 @@ if __name__ == '__main__':
         updateresult = testrail.update_test_result(project_name, test_plan, "CLI", device_type, 12016,
                                                    testrail_buildversion, cli_result, comment, True)
         logger.info("[Update_Pretesting_CLI] is %s..." % (updateresult))
-        '''
+        
