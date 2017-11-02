@@ -477,30 +477,33 @@ if __name__ == '__main__':
     #private_client_maintenance_ip = "10.2.66.64"  # "10.2.66.65"
     private_login_user ="admin"
     private_login_password ="admin"
-    if len(sys.argv) >3:
-        connect_type = sys.argv[1]
-        Routing_Server_Info = sys.argv[2] #ssh_10.2.53.201_22_10.2.53.201_admin_Lilee1234 =>connecttype_ip_port_maintenceip_username_password
+    if len(sys.argv) >2:
 
-        server_connect_type = Routing_Server_Info.split("_")[0]
-        server_ip =Routing_Server_Info.split("_")[1]
-        server_port =Routing_Server_Info.split("_")[2]
-        server_maintenance_ip = Routing_Server_Info.split("_")[3]
-        server_login_user = Routing_Server_Info.split("_")[4]
-        server_login_password = Routing_Server_Info.split("_")[5]
+        LMC_info = sys.argv[1].split("_")  # ssh_10.2.53.201_22_admin_Lilee1234
+        LMS_info = sys.argv[2].split("_")  # telnet_10.2.66.50_2038_admin_admin
+        STS_info = sys.argv[3].split("_")  #  telnet_10.2.66.50_2040_admin_admin
 
-        public_client_Info=sys.argv[3]#telnet_10.2.66.50_2038_admin_admin =>connecttype_ip_port_maintenceip_username_password
-        public_connect_type = public_client_Info.split("_")[0]
-        public_client_ip =public_client_Info.split("_")[1]
-        public_client_port =public_client_Info.split("_")[2]
-        public_login_user = Routing_Server_Info.split("_")[3]
-        public_login_password = Routing_Server_Info.split("_")[4]
+        server_connect_type = LMC_info[0]
+        server_ip = LMC_info[1]
+        server_port = LMC_info[2]
+        #server_maintenance_ip = Routing_Server_Info.split("_")[3]
+        server_login_user =LMC_info[3]
+        server_login_password = LMC_info[4]
 
-        private_client_Info=sys.argv[4]#telnet_10.2.66.50_2040_admin_admin =>connecttype_ip_port_maintenceip_username_password
-        private_connect_type = private_client_Info.split("_")[0]
-        private_client_ip =private_client_Info.split("_")[1]
-        private_client_port =private_client_Info.split("_")[2]
-        private_login_user = Routing_Server_Info.split("_")[3]
-        private_login_password = Routing_Server_Info.split("_")[4]
+        #public_client_Info = LMS_info[3]  # telnet_10.2.66.50_2038_admin_admin =>connecttype_ip_port_maintenceip_username_password
+        public_connect_type = LMS_info[0]
+        public_client_ip = LMS_info[1]
+        public_client_port = LMS_info[2]
+        public_login_user = LMS_info[3]
+        public_login_password = LMS_info[4]
+
+        #private_client_Info = sys.argv[4]  # telnet_10.2.66.50_2040_admin_admin =>connecttype_ip_port_maintenceip_username_password
+        private_connect_type = STS_info[0]
+        private_client_ip = STS_info[1]
+        private_client_port = STS_info[2]
+        private_login_user = STS_info[3]
+        private_login_password = STS_info[4]
+
 
 
     #Routing Server set configuration
