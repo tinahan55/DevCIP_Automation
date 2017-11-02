@@ -477,7 +477,7 @@ if __name__ == '__main__':
     #private_client_maintenance_ip = "10.2.66.64"  # "10.2.66.65"
     private_login_user ="admin"
     private_login_password ="admin"
-    if len(sys.argv) >2:
+    if len(sys.argv) >3:
 
         LMC_info = sys.argv[1].split("_")  # ssh_10.2.53.201_22_admin_Lilee1234
         LMS_info = sys.argv[2].split("_")  # telnet_10.2.66.50_2038_admin_admin
