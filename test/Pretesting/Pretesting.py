@@ -132,12 +132,12 @@ def OS_1410(device):
     wlan0_mac_address = "04:f0:21:25:46:7b"
     wlan1_mac_address = "04:f0:21:25:46:7a"
     checkitem = "Check_OS-1410"
-    mainlogger.info("[%s]Starting" % (checkitem))
+    logger.info("[%s]Starting" % (checkitem))
     checkcommandlist = ["ifconfig wlan0", "ifconfig wlan1"]
     checkitemlist = ["ether %s" %(wlan0_mac_address), "ether %s" %(wlan1_mac_address)]
     for index, value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
-        result = device_check_info(mainlogger, device, checkitem, value, checkmatch)
+        result = device_check_info(logger, device, checkitem, value, checkmatch)
     return result
 
 def Pretesting_WiFi(device):
