@@ -305,7 +305,7 @@ def set_log(filename,loggername):
 
 if __name__ == '__main__':
     logfilename = "Pretesting%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
-    logger = set_log(logfilename,"Pre_Testing")
+    logger = set_log(logfilename,"Pretesting")
     ip ="10.2.66.65"
     port = 22
     mode ="ssh"
@@ -313,11 +313,11 @@ if __name__ == '__main__':
     password ="admin"
     public_ping_ip = "8.8.8.8"
 
-    device =Device_Tool(ip,port,mode,username,password,"Pre_Testing")
+    device =Device_Tool(ip,port,mode,username,password,"Pretesting")
     project_name ="LileeOS"
     test_plan = "LileeOS_Weekly_Pretest"
     #test_run = "PreTesting"
-    comment = "Auto result upload by Lance"
+    comment = "Auto result upload by SQA"
     testrail =TestRailAPI(logname="Pretesting")
     if device:
 
@@ -349,7 +349,7 @@ if __name__ == '__main__':
 
         updateresult = testrail.update_test_result(project_name, test_plan, "Cellular", device_type, 7828,
                                                    testrail_buildversion, basic_dialer, comment, True)
-        logger.info("[Update_Pretesting_Dialer_Basic]update_test_result : %s" % ( updateresult))
+        logger.info("[Update_Pretesting_Dialer_Basic]update_test_result : %s" % (updateresult))
 
         iccid_result = Dialer_Iccid_info(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "Cellular", device_type, 6695,
