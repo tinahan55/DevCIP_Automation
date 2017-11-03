@@ -3,6 +3,7 @@ __author__ = 'lance.chien'
 
 from lib.Configuration import *
 from lib.Device import *
+from lib.TestRail import *
 import os
 from lib.TelnetConsole import *
 
@@ -416,7 +417,7 @@ def Tunnel_Basic(device,interface,controller_ip): # Tesitng  basic tunnel under 
                 result = device_check_info(logger, device, checkitem, value, checkmatch)
                 if result == False:
                     return result
-                time.sleep(120)
+                time.sleep(60)
             return result
     else:
         logger.write("info", "Server Device Interface Faile")
@@ -458,6 +459,11 @@ if __name__ == '__main__':
     private_ping_ip = "10.1.2.1"
     controller_int_ip = "10.2.53.201"#"10.2.66.60"#
     controller_public_ip = "60.248.28.117"#"60.248.28.118"#
+    project_name = "LileeOS"
+    test_plan = "LileeOS_Weekly_Pretest"
+    # test_run = "PreTesting"
+    comment = "Auto result upload by SQA"
+    testrail = TestRailAPI(logname="Pretesting")
 
     #STS
     Server_Type = ""
@@ -505,7 +511,7 @@ if __name__ == '__main__':
         private_login_password = sts_info[4]
 
     #Routing Server set configuration
-    server_device = Device_Tool(server_ip, server_port, server_connecttype, server_login_user, server_login_password, "Tunnel_test")
+    '''server_device = Device_Tool(server_ip, server_port, server_connecttype, server_login_user, server_login_password, "Tunnel_test")
     #print "Test Start"
     if server_device.target:
         #logger.write("info", "Server Device type:%s" % (server_device.device_type))
@@ -529,17 +535,17 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if server_device:
-        Tunnel_Basic(server_device, "eth 1",controller_public_ip)
+        #Tunnel_Basic(server_device, "eth 1",controller_public_ip)
         set_result = True
     else:
         #print server_device
         logger.write("info", "Server Failed by %s"%(server_device))
-        sys.exit(0)
+        sys.exit(0)'''
 
 
     #Routing public client set configuration
     if set_result == True :
-        public_client_device = Device_Tool(public_client_ip, public_client_port, connecttype, public_login_user, public_login_password, "Tunnel_test")
+        '''public_client_device = Device_Tool(public_client_ip, public_client_port, connecttype, public_login_user, public_login_password, "Tunnel_test")
         if public_client_device.target:
             public_client_device.device_send_command("update terminal paging disable",10)
             public_client_device.device_get_version()
@@ -553,20 +559,26 @@ if __name__ == '__main__':
             logger.write("info","Public Client mac:%s"%(public_client_device.device_register_MAC))
             logger.write("info","Public Client hostname:%s"%(public_client_device.device_hostname))
             logger.write("info","Public Client version:%s"%(public_client_device.branch_version))
-
+            testrail_buildversion = public_client_device.build_image
+            public_client_device_type=public_client_device.device_type
             #public_client_device.device_no_config()
             public_client_device.device_send_command("show version")
             public_client_device.device_send_command("config host name R11_%s"%(public_client_device.device_type))
             #set_result =Public_client_config(public_client_device)
             if public_client_device:
-                Tunnel_Basic(public_client_device, "dialer 0",controller_public_ip)
-                Tunnel_Basic(public_client_device, "maintenance 0", controller_int_ip)
+                tunnel_dialer = Tunnel_Basic(public_client_device, "dialer 0",controller_public_ip)
+                tunnel_mgmt=Tunnel_Basic(public_client_device, "maintenance 0", controller_int_ip)
+
+                updateresult = testrail.update_test_result(project_name, test_plan, "Mobility", public_client_device_type, 12455,testrail_buildversion, tunnel_mgmt, comment, True)
+                updateresult = testrail.update_test_result(project_name, test_plan, "Mobility", public_client_device_type, 12420,testrail_buildversion, tunnel_dialer, comment, True)
+                logger.info("[Update_Pretesting_Dialer_Basic]update_test_result : %s" % (updateresult))
+
             else:
                 logger.write("info", "Public_Client Failed by %s" % (public_client_device))
                 sys.exit(0)
         else:
             logger.write("info", "Public_Client Login Failed")
-            sys.exit(0)
+            sys.exit(0)'''
         private_client_device = Device_Tool(private_client_ip, private_client_port, connecttype, private_login_user, private_login_password, "Tunnel_test")
         if private_client_device.target:
             private_client_device.device_send_command("update terminal paging disable",10)
@@ -581,15 +593,21 @@ if __name__ == '__main__':
             logger.write("info","Private Client mac:%s"%(private_client_device.device_register_MAC))
             logger.write("info","Private Client hostname:%s"%(private_client_device.device_hostname))
             logger.write("info","Private Client version:%s"%(private_client_device.branch_version))
-
+            testrail_buildversion = private_client_device.build_image
+            private_clien_device_type = private_client_device.device_type
             #public_client_device.device_no_config()
             #public_client_device.device_send_command("config switch port 0 disable")
             private_client_device.device_send_command("show version")
             private_client_device.device_send_command("config host name R11_%s"%(private_client_device.device_type))
             #set_result =Public_client_config(public_client_device)
             if private_client_device:
-                Tunnel_Basic(private_client_device, "dialer 0",controller_public_ip)
-                Tunnel_Basic(private_client_device, "maintenance 0", controller_int_ip)
+
+                tunnel_dialer = Tunnel_Basic(private_client_device, "dialer 0",controller_public_ip)
+                tunnel_mgmt = Tunnel_Basic(private_client_device, "maintenance 0", controller_int_ip)
+
+                updateresult = testrail.update_test_result(project_name, test_plan, "Mobility", private_clien_device_type, 12455,testrail_buildversion, tunnel_mgmt, comment, True)
+                updateresult = testrail.update_test_result(project_name, test_plan, "Mobility", private_clien_device_type, 12420,testrail_buildversion, tunnel_dialer, comment, True)
+                logger.info("[Update_Pretesting_Dialer_Basic]update_test_result : %s" % (updateresult))
 
             else:
                 logger.write("info", "Private_client Login Failed")
