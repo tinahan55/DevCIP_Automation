@@ -51,7 +51,7 @@ class RackTestReport(object):
         return devicename
 
 class TestRailAPI(object):
-    def __init__(self,host='https://lileesystems.testrail.net',user = "ricky.wang@lileesystems.com",password = "A@exp0lk2015"
+    def __init__(self,host='https://lileesystems.testrail.net',user = "sqa.testrail@lileesystems.com",password = "5tgb^YHN"
                  ,logname=""):
         self.client = APIClient(host)
         self.client.user =user
@@ -305,8 +305,8 @@ if __name__ == '__main__':
     result = "PASS"
     rack_group = "4_ATS28FR_Group1282:7_Group1280:8_Group1281_Group2281_Group3281"
     apiurl = "http://10.2.10.191:8080/api"
-    testrailusername = "ricky.wang@lileesystems.com"
-    testrailpassword = "A@exp0lk2015"
+    testrailusername = "sqa.testrail@lileesystems.com"
+    testrailpassword = "5tgb^YHN"
     racklist =list()
     groupidlist = list()
     if len(sys.argv)>3:
