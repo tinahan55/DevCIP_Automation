@@ -166,7 +166,7 @@ def Pretesting_WiFi(device):
     device.device_send_command("config interface wlan %s mode access-point"%(wlan0_index))
     device.device_send_command("config interface wlan %s band 5-ghz" %(wlan0_index))
     device.device_send_command("config interface wlan %s enable" %(wlan0_index))
-    time.sleep(120)
+    time.sleep(60)
     #setting STA
     device.device_send_command("config interface wlan %s ip address dhcp" %(wlan1_index))
     device.device_send_command("config interface wlan %s station ssid %s" %(wlan1_index, sta_ssid_name))
@@ -319,6 +319,17 @@ if __name__ == '__main__':
     #test_run = "PreTesting"
     comment = "Auto result upload by SQA"
     testrail =TestRailAPI(logname="Pretesting")
+
+    if len(sys.argv)>3:
+        device_info =sys.argv[1].split("_") #ssh_10.2.66.52_22_admin_admin
+
+        # device_info
+        device_connect_mode = device_info[0]
+        device_ip = device_info[1]
+        device_port = device_info[2]
+        device_username = device_info[3]
+        device_password = device_info[4]
+
     if device:
 
         device.device_get_version()
@@ -361,15 +372,6 @@ if __name__ == '__main__':
                                                    testrail_buildversion, info_result, comment, True)
         logger.info("[Update_Pretesting_Dialer_Info]update_test_result : %s" % (updateresult))
 
-        wifi_result = Pretesting_WiFi(device)
-        updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 6889,
-                                                   testrail_buildversion, wifi_result, comment, True)
-        updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 7330,
-                                                   testrail_buildversion, wifi_result, comment, True)
-        updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 9227,
-                                                   testrail_buildversion, wifi_result, comment, True)
-        logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))
-
         poe_result = Pretesting_Poe(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "PoE", device_type, 6965,
                                                    testrail_buildversion, poe_result, comment, True)
@@ -392,4 +394,14 @@ if __name__ == '__main__':
         updateresult = testrail.update_test_result(project_name, test_plan, "CLI", device_type, 12016,
                                                    testrail_buildversion, cli_result, comment, True)
         logger.info("[Update_Pretesting_CLI] is %s..." % (updateresult))
+
+        if device.device_type == "sts":
+            wifi_result = Pretesting_WiFi(device)
+            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 6889,
+                                                       testrail_buildversion, wifi_result, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 7330,
+                                                       testrail_buildversion, wifi_result, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 9227,
+                                                       testrail_buildversion, wifi_result, comment, True)
+            logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))
         
