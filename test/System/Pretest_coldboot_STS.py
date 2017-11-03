@@ -38,7 +38,7 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
 def  check_booting(hostip,check_cycle):
     k = 0
     while k < check_cycle:
-        if networktool.Host_Ping(hostip,28):
+        if networktool.Host_Ping(hostip,35):
             break
         else:
             time.sleep(1)
@@ -132,8 +132,8 @@ def OS_1410(device):
     logger.info("[WLAN-MAC_info] is %s..."% (result))
 
 if __name__ == '__main__':
-    logfilename = "coolboot%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
-    logger = set_log(logfilename,"cool_boot")
+    logfilename = "Pretesting%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
+    logger = set_log(logfilename,"Pretesting")
     ip = "10.2.66.52"#"10.2.8.252"
     port = 22
     mode ="ssh"
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         cycle_times = int(condition_info[0])
 
     try:
-        device =Device_Tool(ip,port,mode,username,password,"check_list")
+        device =Device_Tool(ip,port,mode,username,password,"Pretesting")
         powerCycle = powerCycle()
         pass_count = 0
         if device:
@@ -216,14 +216,10 @@ if __name__ == '__main__':
                                 updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type,12272, testrail_buildversion, stress_wifi_init,comment, True)
                                 logger.info("[System_Stress_coldboot]update_test_result : %s" % (updateresult))
                                 sys.exit(0)
-            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12039,
-                                                       testrail_buildversion, stress_switch_init, comment, True)
-            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12037,
-                                                       testrail_buildversion, stress_ssd_init, comment, True)
-            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12541,
-                                                       testrail_buildversion, stress_ssd_init, comment, True)
-            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 12272,
-                                                       testrail_buildversion, stress_wifi_init, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12039,testrail_buildversion, stress_switch_init, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12037,testrail_buildversion, stress_ssd_init, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12541,testrail_buildversion, stress_ssd_init, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 12272,testrail_buildversion, stress_wifi_init, comment, True)
             logger.info("[System_Stress_coldboot]update_test_result : %s" % (updateresult))
 
 
