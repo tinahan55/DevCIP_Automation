@@ -307,14 +307,8 @@ def set_log(filename,loggername):
 if __name__ == '__main__':
     logfilename = "Pretesting%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"Pretesting")
-    ip ="10.2.66.64"
-    port = 22
-    mode ="ssh"
-    username = "admin"
-    password ="admin"
     public_ping_ip = "8.8.8.8"
 
-    device =Device_Tool(ip,port,mode,username,password,"Pretesting")
     project_name ="LileeOS"
     test_plan = "LileeOS_Weekly_Pretest"
     #test_run = "PreTesting"
@@ -323,14 +317,20 @@ if __name__ == '__main__':
 
     if len(sys.argv)>1:
         device_info =sys.argv[1].split("_") #ssh_10.2.66.52_22_admin_admin
-
         # device_info
-        mode = device_info[0]
-        ip = device_info[1]
-        port = device_info[2]
+        device_connect_type = device_info[0]
+        device_ip = device_info[1]
+        device_port = int(device_info[2])
         username = device_info[3]
         password = device_info[4]
+    else:
+        device_ip = "10.2.66.64"
+        device_port = 22
+        device_connect_type = "ssh"
+        username = "admin"
+        password = "admin"
 
+    device = Device_Tool(device_ip, device_port, device_connect_type, username, password, "Pretesting")
     if device:
         device.device_send_command("update terminal paging disable")
         device.device_get_version()
