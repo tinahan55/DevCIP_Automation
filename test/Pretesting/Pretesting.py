@@ -326,10 +326,10 @@ if __name__ == '__main__':
 
         # device_info
         device_connect_mode = device_info[0]
-        device_ip = device_info[1]
-        device_port = device_info[2]
-        device_username = device_info[3]
-        device_password = device_info[4]
+        ip = device_info[1]
+        port = device_info[2]
+        username = device_info[3]
+        password = device_info[4]
 
     if device:
         device.device_send_command("update terminal paging disable")
