@@ -321,7 +321,7 @@ if __name__ == '__main__':
     comment = "Auto result upload by SQA"
     testrail =TestRailAPI(logname="Pretesting")
 
-    if len(sys.argv)>3:
+    if len(sys.argv)>1:
         device_info =sys.argv[1].split("_") #ssh_10.2.66.52_22_admin_admin
 
         # device_info
@@ -339,6 +339,7 @@ if __name__ == '__main__':
         logger.info("Device build image:%s"%(device.build_image))
         testrail_buildversion=device.build_image
         Server_Type = device.device_product_name
+        device_type = device.device_type
         dialer_index = get_dialer_port()
         cellular_index = get_cellular_port()
         wlan0_index = get_wifi_wlan0_index()
@@ -347,13 +348,11 @@ if __name__ == '__main__':
         if "STS" in Server_Type:
             Iccid00 = "89886920041308836573"
             Iccid01 = "89886891000087039135"
-            device_type = "STS"
+            #device_type = "STS"
         elif "LMS" in Server_Type:
             Iccid00 = "89886891000087039127"
             Iccid01 = "89886920031026180016"
-            device_type = "LMS"
-        else:
-            device_type = "DTS"
+            #device_type = "LMS"
 
 
         basic_dialer = Pretesting_Cellular(device)
@@ -362,7 +361,7 @@ if __name__ == '__main__':
                                                    testrail_buildversion, basic_dialer, comment, True)
         logger.info("[Update_Pretesting_Dialer_Basic]update_test_result : %s" % (updateresult))
 
-        '''iccid_result = Dialer_Iccid_info(device)
+        iccid_result = Dialer_Iccid_info(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "Cellular", device_type, 6695,
                                                    testrail_buildversion, iccid_result, comment, True)
         logger.info("[Update_Pretesting_Dialer_ICCID]update_test_result : %s" % (updateresult))
@@ -403,5 +402,5 @@ if __name__ == '__main__':
                                                        testrail_buildversion, wifi_result, comment, True)
             updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 9227,
                                                        testrail_buildversion, wifi_result, comment, True)
-            logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))'''
+            logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))
         
