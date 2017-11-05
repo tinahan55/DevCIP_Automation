@@ -83,7 +83,7 @@ def Pretesting_Cellular(device):
     checkcommandlist = ["show interface all","show interface dialer %s detail"%(dialer0_index),"show sim-management current-status"
         ,"ping -I %s -c5 8.8.8.8"%(cellular0_usb_index),"show platform led"]
 
-    checkitemlist = ["dialer %s (.*) up"%(dialer0_index),"Operational : up | MTU : 1500","dialer %s (.*) %s "%(dialer0_index),"64 bytes from 8.8.8.8: icmp_seq=(.*)","LTE%s (.*) green"%(cellular0_index)]
+    checkitemlist = ["dialer %s (.*) up"%(dialer0_index),"Operational : up | MTU : 1500","dialer %s (.*)"%(dialer0_index),"64 bytes from 8.8.8.8: icmp_seq=(.*)","LTE%s (.*) green"%(cellular0_index)]
 
     logger.info("[%s]Starting"%(checkitem))
     for index,value in enumerate(checkcommandlist):
@@ -362,7 +362,7 @@ if __name__ == '__main__':
                                                    testrail_buildversion, basic_dialer, comment, True)
         logger.info("[Update_Pretesting_Dialer_Basic]update_test_result : %s" % (updateresult))
 
-        iccid_result = Dialer_Iccid_info(device)
+        '''iccid_result = Dialer_Iccid_info(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "Cellular", device_type, 6695,
                                                    testrail_buildversion, iccid_result, comment, True)
         logger.info("[Update_Pretesting_Dialer_ICCID]update_test_result : %s" % (updateresult))
@@ -403,5 +403,5 @@ if __name__ == '__main__':
                                                        testrail_buildversion, wifi_result, comment, True)
             updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 9227,
                                                        testrail_buildversion, wifi_result, comment, True)
-            logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))
+            logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))'''
         
