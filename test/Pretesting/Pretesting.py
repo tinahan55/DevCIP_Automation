@@ -53,7 +53,9 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     logger.info("%s starting"%(title))
     checkresult = device.device_send_command_match(checkcommand,5,checkmatch)
     logger.info("%s check %s result :%s"%(title,checkmatch,checkresult))
+    print checkresult
     if checkresult== False:
+        print device.target_response
         logger.info("%s check %s error :%s"%(title,checkmatch,device.target_response))
     return checkresult
 
@@ -78,11 +80,10 @@ def Pretesting_Cellular(device):
     time.sleep(30)
 
     checkitem ="Pretesting_Cellular"
-    checkcommandlist = ["show platform led","show interface all","show interface dialer %s detail"%(dialer0_index),"show sim-management current-status"
-        ,"ping -I %s -c5 8.8.8.8"%(cellular0_usb_index)]
+    checkcommandlist = ["show interface all","show interface dialer %s detail"%(dialer0_index),"show sim-management current-status"
+        ,"ping -I %s -c5 8.8.8.8"%(cellular0_usb_index),"show platform led"]
 
-    checkitemlist = ["LTE%s (.*) green"%(cellular0_index),"dialer %s (.*) up"%(dialer0_index)
-       ,"Operational : up | MTU : 1500","dialer %s (.*) %s (.*)"%(dialer0_index,dialer0_carrier),"64 bytes from 8.8.8.8: icmp_seq=(.*)"]
+    checkitemlist = ["dialer %s (.*) up"%(dialer0_index),"Operational : up | MTU : 1500","dialer %s (.*) %s "%(dialer0_index),"64 bytes from 8.8.8.8: icmp_seq=(.*)","LTE%s (.*) green"%(cellular0_index)]
 
     logger.info("[%s]Starting"%(checkitem))
     for index,value in enumerate(checkcommandlist):
@@ -93,10 +94,10 @@ def Pretesting_Cellular(device):
             #print cellular_result
             break
     if cellular_result:
-        logger.info("[Pretesting_Cellular] Test  fail!!")
+        logger.info("[Pretesting_Cellular] Successfully!!!")
         return "PASS"
     else:
-        logger.info("[Pretesting_Cellular] Successfully!!!")
+        logger.info("[Pretesting_Cellular] Test  fail!!")
         return "FAIL"
 
 def Dialer_Iccid_info(device):
@@ -306,7 +307,7 @@ def set_log(filename,loggername):
 if __name__ == '__main__':
     logfilename = "Pretesting%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"Pretesting")
-    ip ="10.2.66.65"
+    ip ="10.2.66.64"
     port = 22
     mode ="ssh"
     username = "admin"
@@ -331,7 +332,7 @@ if __name__ == '__main__':
         device_password = device_info[4]
 
     if device:
-
+        device.device_send_command("update terminal paging disable")
         device.device_get_version()
         logger.info("Device Bios Version:%s"%(device.bios_version))
         logger.info("Device recovery image:%s"%(device.boot_image))
@@ -354,7 +355,6 @@ if __name__ == '__main__':
         else:
             device_type = "DTS"
 
-        device.device_send_command("update terminal paging disable")
 
         basic_dialer = Pretesting_Cellular(device)
 
