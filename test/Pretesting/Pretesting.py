@@ -325,7 +325,7 @@ if __name__ == '__main__':
         device_info =sys.argv[1].split("_") #ssh_10.2.66.52_22_admin_admin
 
         # device_info
-        device_connect_mode = device_info[0]
+        mode = device_info[0]
         ip = device_info[1]
         port = device_info[2]
         username = device_info[3]
