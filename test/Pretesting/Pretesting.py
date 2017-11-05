@@ -53,7 +53,6 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     logger.info("%s starting"%(title))
     checkresult = device.device_send_command_match(checkcommand,5,checkmatch)
     logger.info("%s check %s result :%s"%(title,checkmatch,checkresult))
-    print checkresult
     if checkresult== False:
         print device.target_response
         logger.info("%s check %s error :%s"%(title,checkmatch,device.target_response))
@@ -203,9 +202,9 @@ def Pretesting_Poe(device):
 
     checkitem ="Pretesting_Poe"
     checkcommandlist = ["show poe budget"]
-    if device_type == "STS":
+    if device_type == "sts":
         checkitemlist = ["Oper. Limit: 61.6 watts"]
-    elif device_type == "LMS" :
+    else:
         checkitemlist = [" Oper.Limit: 132.6 watts"]
 
     logger.info("[%s]Starting"%(checkitem))
