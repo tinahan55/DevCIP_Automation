@@ -82,7 +82,6 @@ def OS_1807(device):
         return "PASS"
     mainlogger.info("[App-engine_init] is %s..." % (result2))
 
-
 def OS_1925(device):
     checkitem = "Check_OS-1925"
     mainlogger.info("[%s]Starting" % (checkitem))
@@ -95,6 +94,64 @@ def OS_1925(device):
             sqamail = sqa_mail()
             sqamail.send_mail("lance.chien@lileesystems.com", "Taiwan Water Warmboot failed", u"Warmboot result Failed")
     return result
+
+def Pretesting_WiFi(device):
+    #######################################################################
+    # 1. WLAN0 and WLAN1 MAC might have chance to swap            (dine)  #
+    # 2. Deploy WiFi to AP mode and use authentication WPA2       (done)  #
+    # 3. Check WiFi protocol with 802.11ac 5GHz                   (done)  #
+    # 4. Deploy WiFi to STA mode and use authentication WPA2-PSK  (done)  #
+    #######################################################################
+    #setting AP parameters
+    wifi_ip_address = "172.20.0.1"
+    wifi_ip_address_mask = "255.255.255.0"
+    ap_ssid_name = "WifiPretest"
+    ap_password = "12345678"
+    #setting STA parameters
+    sta_ssid_name = "SJ-STS-Alpha"
+    sta_password = "ilovelilee"
+
+    mainlogger.info("[Pre-testing_WiFi] Testing start...")
+    #setting AP
+    device.device_send_command("config interface wlan %s ip address %s netmask %s" %(wlan0_index, wifi_ip_address, wifi_ip_address_mask))
+    device.device_send_command("config interface wlan %s access-point ssid %s" %(wlan0_index, ap_ssid_name))
+    device.device_send_command("config interface wlan %s access-point authentication key-management wpa-psk" %(wlan0_index))
+    device.device_send_command("config interface wlan %s access-point authentication wpa-version 2" %(wlan0_index))
+    device.device_send_command("config interface wlan %s access-point authentication wpa-psk-passphrase %s" %(wlan0_index, ap_password))
+    device.device_send_command("config interface wlan %s mode access-point"%(wlan0_index))
+    device.device_send_command("config interface wlan %s band 5-ghz" %(wlan0_index))
+    device.device_send_command("config interface wlan %s enable" %(wlan0_index))
+    time.sleep(120)
+    #setting STA
+    device.device_send_command("config interface wlan %s ip address dhcp" %(wlan1_index))
+    device.device_send_command("config interface wlan %s station ssid %s" %(wlan1_index, sta_ssid_name))
+    device.device_send_command("config interface wlan %s station authentication key-management wpa-psk" %(wlan1_index))
+    device.device_send_command("config interface wlan %s station authentication wpa-psk-passphrase %s" %(wlan1_index,sta_password))
+    device.device_send_command("config interface wlan %s mode station" %(wlan1_index))
+    device.device_send_command("config interface wlan %s enable" %(wlan1_index))
+    time.sleep(120)
+
+
+    checkitem = "Pretesting_WiFi"
+    checkcommandlist = ["show interface wlan %s detail" %(wlan0_index),"show interface wlan 0 interface-info",
+                        "show interface wlan 1 detail", "ping -I wlan1 -c 5 172.20.5.1"]
+    checkitemlist = ["Administrative : enable&&Operational : up", "SSID : %s" %(ap_ssid_name), "Administrative : enable&&Operational : up",
+                     "64 bytes from 172.20.5.1: icmp_seq=5"]
+
+    mainlogger.info("[%s]Starting"%(checkitem))
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        wifi_result = device_check_info(mainlogger,device,checkitem,value,checkmatch)
+        if wifi_result == False:
+            print device.target_response
+            break
+
+    if wifi_result:
+        mainlogger.info("[Pretesting_Wifi] Successfully!!!")
+        return "PASS"
+    else:
+        mainlogger.info("[Pretesting_WiFi] Test failed!!!")
+        return "FAIL"
 
 if __name__ == '__main__':
     if len(sys.argv) > 4:
@@ -112,15 +169,16 @@ if __name__ == '__main__':
     else:
         logfilename = "Stress_warmboot_%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
         #mainlogger = set_log(logfilename,"Stress_warmboot")
-        device_ip = "10.2.66.52"
+        device_ip = "10.2.53.151"
         device_port = 22
         device_connect_type ="ssh"
         username = "admin"
         password ="admin"
-        test_cycle = 200
+        test_cycle = 50
         power_cycle_sleep = 180
         Sata0_size = "29.8G"
-
+        wlan0_index = "0"
+        wlan1_index = "1"
 
 
     try:
@@ -134,6 +192,7 @@ if __name__ == '__main__':
         comment = "Auto result upload by SQA"
 
         if device:
+            device.device_send_command("diag interface wlan 0 low-level-software debug-level debug")
             device.device_get_version()
             mainlogger.info("Device Bios Version:%s"%(device.bios_version))
             mainlogger.info("Device recovery image:%s"%(device.boot_image))
@@ -146,22 +205,33 @@ if __name__ == '__main__':
                 device.device_send_command("show version")
                 device.device_send_command("reboot")
                 cycle_result = True
-                mainlogger.info("[%s][cycle_result]result :%s"%(k,cycle_result))
+                mainlogger.info("[%s][cycle_result]result :%s"%(k+1,cycle_result))
                 if cycle_result:
-                    mainlogger.info("[%s][cycle_sleep]%s seconds"%(k,power_cycle_sleep))
+                    mainlogger.info("[%s][cycle_sleep]%s seconds"%(k+1,power_cycle_sleep))
                     time.sleep(2)
                     count = check_booting(device_ip,power_cycle_sleep)
-                    mainlogger.info("[%s][cycle_sleep]wait %s seconds"%(k,count))
+                    mainlogger.info("[%s][cycle_sleep]wait %s seconds"%(k+1,count))
                     if count < power_cycle_sleep:
                         #time.sleep(power_cycle_sleep)
                         device =Device_Tool(device_ip,device_port,device_connect_type,username,password,"Stress_warmboot")
                         if device:
+                            device.device_send_command("update terminal paging disable")
+                            device.device_get_version()
+                            mainlogger.info("Device Bios Version:%s" % (device.bios_version))
+                            mainlogger.info("Device recovery image:%s" % (device.boot_image))
+                            mainlogger.info("Device build image:%s" % (device.build_image))
                             OS1807_result = OS_1807(device)
                             if OS1807_result == "FAIL" :
                                 updateresult = testrail.update_test_result(project_name, test_plan, "Systems",device_type, 12588, testrail_buildversion,OS1807_result, comment, True)
                                 mainlogger.info("[System_Stress_warmboot]update_test_result : %s" % (updateresult))
                                 sys.exit(0)
-                            time.sleep(20)
+                            wifi_result = Pretesting_WiFi(device)
+                            if wifi_result == "FAIL":
+                                updateresult = testrail.update_test_result(project_name, test_plan, "WiFi",device_type, 15932, testrail_buildversion,wifi_result, comment, True)
+                                mainlogger.info("[System_Stress_warmboot]update_test_result : %s" % (updateresult))
+                                time.sleep(120)
+            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12588,testrail_buildversion, OS1807_result, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 15932,testrail_buildversion, wifi_result, comment, True)
 
 
 
