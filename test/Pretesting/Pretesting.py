@@ -54,6 +54,7 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     checkresult = device.device_send_command_match(checkcommand,5,checkmatch)
     logger.info("%s check %s result :%s"%(title,checkmatch,checkresult))
     if checkresult== False:
+        print device.target_response
         logger.info("%s check %s error :%s"%(title,checkmatch,device.target_response))
     return checkresult
 
@@ -78,11 +79,10 @@ def Pretesting_Cellular(device):
     time.sleep(30)
 
     checkitem ="Pretesting_Cellular"
-    checkcommandlist = ["show platform led","show interface all","show interface dialer %s detail"%(dialer0_index),"show sim-management current-status"
-        ,"ping -I %s -c5 8.8.8.8"%(cellular0_usb_index)]
+    checkcommandlist = ["show interface all","show interface dialer %s detail"%(dialer0_index),"show sim-management current-status"
+        ,"ping -I %s -c5 8.8.8.8"%(cellular0_usb_index),"show platform led"]
 
-    checkitemlist = ["LTE%s (.*) green"%(cellular0_index),"dialer %s (.*) up"%(dialer0_index)
-       ,"Operational : up | MTU : 1500","dialer %s (.*) %s (.*)"%(dialer0_index,dialer0_carrier),"64 bytes from 8.8.8.8: icmp_seq=(.*)"]
+    checkitemlist = ["dialer %s (.*) up"%(dialer0_index),"Operational : up | MTU : 1500","dialer %s (.*)"%(dialer0_index),"64 bytes from 8.8.8.8: icmp_seq=(.*)","LTE%s (.*) green"%(cellular0_index)]
 
     logger.info("[%s]Starting"%(checkitem))
     for index,value in enumerate(checkcommandlist):
@@ -93,10 +93,10 @@ def Pretesting_Cellular(device):
             #print cellular_result
             break
     if cellular_result:
-        logger.info("[Pretesting_Cellular] Test  fail!!")
+        logger.info("[Pretesting_Cellular] Successfully!!!")
         return "PASS"
     else:
-        logger.info("[Pretesting_Cellular] Successfully!!!")
+        logger.info("[Pretesting_Cellular] Test  fail!!")
         return "FAIL"
 
 def Dialer_Iccid_info(device):
@@ -166,7 +166,7 @@ def Pretesting_WiFi(device):
     device.device_send_command("config interface wlan %s mode access-point"%(wlan0_index))
     device.device_send_command("config interface wlan %s band 5-ghz" %(wlan0_index))
     device.device_send_command("config interface wlan %s enable" %(wlan0_index))
-    time.sleep(120)
+    time.sleep(60)
     #setting STA
     device.device_send_command("config interface wlan %s ip address dhcp" %(wlan1_index))
     device.device_send_command("config interface wlan %s station ssid %s" %(wlan1_index, sta_ssid_name))
@@ -202,9 +202,9 @@ def Pretesting_Poe(device):
 
     checkitem ="Pretesting_Poe"
     checkcommandlist = ["show poe budget"]
-    if device_type == "STS":
+    if device_type == "sts":
         checkitemlist = ["Oper. Limit: 61.6 watts"]
-    elif device_type == "LMS" :
+    else:
         checkitemlist = [" Oper.Limit: 132.6 watts"]
 
     logger.info("[%s]Starting"%(checkitem))
@@ -306,27 +306,39 @@ def set_log(filename,loggername):
 if __name__ == '__main__':
     logfilename = "Pretesting%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"Pretesting")
-    ip ="10.2.66.65"
-    port = 22
-    mode ="ssh"
-    username = "admin"
-    password ="admin"
     public_ping_ip = "8.8.8.8"
 
-    device =Device_Tool(ip,port,mode,username,password,"Pretesting")
     project_name ="LileeOS"
     test_plan = "LileeOS_Weekly_Pretest"
     #test_run = "PreTesting"
     comment = "Auto result upload by SQA"
     testrail =TestRailAPI(logname="Pretesting")
-    if device:
 
+    if len(sys.argv)>1:
+        device_info =sys.argv[1].split("_") #ssh_10.2.66.52_22_admin_admin
+        # device_info
+        device_connect_type = device_info[0]
+        device_ip = device_info[1]
+        device_port = int(device_info[2])
+        username = device_info[3]
+        password = device_info[4]
+    else:
+        device_ip = "10.2.66.64"
+        device_port = 22
+        device_connect_type = "ssh"
+        username = "admin"
+        password = "admin"
+
+    device = Device_Tool(device_ip, device_port, device_connect_type, username, password, "Pretesting")
+    if device:
+        device.device_send_command("update terminal paging disable")
         device.device_get_version()
         logger.info("Device Bios Version:%s"%(device.bios_version))
         logger.info("Device recovery image:%s"%(device.boot_image))
         logger.info("Device build image:%s"%(device.build_image))
         testrail_buildversion=device.build_image
         Server_Type = device.device_product_name
+        device_type = device.device_type
         dialer_index = get_dialer_port()
         cellular_index = get_cellular_port()
         wlan0_index = get_wifi_wlan0_index()
@@ -335,15 +347,12 @@ if __name__ == '__main__':
         if "STS" in Server_Type:
             Iccid00 = "89886920041308836573"
             Iccid01 = "89886891000087039135"
-            device_type = "STS"
+            #device_type = "STS"
         elif "LMS" in Server_Type:
             Iccid00 = "89886891000087039127"
             Iccid01 = "89886920031026180016"
-            device_type = "LMS"
-        else:
-            device_type = "DTS"
+            #device_type = "LMS"
 
-        device.device_send_command("update terminal paging disable")
 
         basic_dialer = Pretesting_Cellular(device)
 
@@ -360,15 +369,6 @@ if __name__ == '__main__':
         updateresult = testrail.update_test_result(project_name, test_plan, "Cellular", device_type, 15719,
                                                    testrail_buildversion, info_result, comment, True)
         logger.info("[Update_Pretesting_Dialer_Info]update_test_result : %s" % (updateresult))
-
-        wifi_result = Pretesting_WiFi(device)
-        updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 6889,
-                                                   testrail_buildversion, wifi_result, comment, True)
-        updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 7330,
-                                                   testrail_buildversion, wifi_result, comment, True)
-        updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 9227,
-                                                   testrail_buildversion, wifi_result, comment, True)
-        logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))
 
         poe_result = Pretesting_Poe(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "PoE", device_type, 6965,
@@ -392,4 +392,14 @@ if __name__ == '__main__':
         updateresult = testrail.update_test_result(project_name, test_plan, "CLI", device_type, 12016,
                                                    testrail_buildversion, cli_result, comment, True)
         logger.info("[Update_Pretesting_CLI] is %s..." % (updateresult))
+
+        if device.device_type == "sts":
+            wifi_result = Pretesting_WiFi(device)
+            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 6889,
+                                                       testrail_buildversion, wifi_result, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 7330,
+                                                       testrail_buildversion, wifi_result, comment, True)
+            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 9227,
+                                                       testrail_buildversion, wifi_result, comment, True)
+            logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))
         
