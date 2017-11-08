@@ -1,0 +1,4 @@
+{
+  "LMC": "config add interface vlan 300\nconfig add interface vlan 100\nconfig add interface vlan 200\nconfig app-engine 0 enable",
+  "STS": "config add interface vlan 300\nconfig add interface vlan 100\nconfig add interface vlan 200\nconfig app-engine 0 enable"
+}
