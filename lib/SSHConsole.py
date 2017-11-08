@@ -55,7 +55,7 @@ class SSHConnect(object):
         time.sleep(2)
         response_result =  self.remote_conn.recv(5000)
         if mode == "shell":
-            if "#" in response_result:
+            if "#" in response_result or "$" in response_result: # "$" Use for ssh to app-engine
                 mode_result = True
             elif "localdomain" in response_result:
                 self.remote_conn.send("%s\n"%("diag shell"))
@@ -73,7 +73,7 @@ class SSHConnect(object):
             if "localdomain" in response_result:
                 mode_result = True
 
-            elif "#" in response_result:
+            elif "#" in response_result or "$" in response_result : # "$" Use for ssh to app-engine
                 self.remote_conn.send("%s\n"%("exit"))
                 time.sleep(2)
                 response_result = self.remote_conn.recv(5000)

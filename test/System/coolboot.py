@@ -36,7 +36,7 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
 def  check_booting(hostip,check_cycle):
     k = 0
     while k < check_cycle:
-        if networktool.Host_Ping(hostip):
+        if networktool.Host_Ping(hostip,30):
             break
         else:
             time.sleep(1)
@@ -46,19 +46,23 @@ def  check_booting(hostip,check_cycle):
 if __name__ == '__main__':
     logfilename = "coolboot%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"cool_boot")
-    ip = "10.2.53.158"
+    ip = "10.2.8.42"
     port = 22
     mode ="ssh"
     username = "admin"
     password ="admin"
-    din_relay_ip = "10.2.53.199"
-    din_relay_user ="root"
-    din_relay_pwd ="lilee1234"
-    din_relay_device_name = "R1-STS4"
-    test_cycle = 20000
+    din_relay_ip = "10.2.11.92"
+    din_relay_user = "admin"
+    din_relay_pwd = "lilee1234"
+    din_relay_index = 1
+    din_relay_cmd = "CCL"
+
+    # condition_info
+    cycle_times = 200
     power_cycle_sleep = 120
     checkcommandlist = ["show interface all"]
     checkitemlist = ["maintenance 0 (.*) up"]
+
     try:
         device =Device_Tool(ip,port,mode,username,password,"check_list")
         powerCycle = powerCycle()
@@ -67,8 +71,8 @@ if __name__ == '__main__':
             logger.info("Device Bios Version:%s"%(device.bios_version))
             logger.info("Device recovery image:%s"%(device.boot_image))
             logger.info("Device build image:%s"%(device.build_image))
-            for k in range(0, test_cycle):
-                power_cycle_result =powerCycle.powerControl(din_relay_ip, din_relay_user, din_relay_pwd, din_relay_device_name )
+            for k in range(0, cycle_times):
+                power_cycle_result =powerCycle.powercontrolbyIndex(din_relay_ip, din_relay_user, din_relay_pwd, din_relay_index, din_relay_cmd)
                 logger.info("[%s][power_cycle_result]result :%s"%(k,power_cycle_result))
                 if power_cycle_result:
                     logger.info("[%s][power_cycle_sleep]%s seconds"%(k,power_cycle_sleep))
