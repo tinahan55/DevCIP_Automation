@@ -294,12 +294,12 @@ def DNAT_Server_dhcp(device):
         result = device_check_info(logger,device,checkitem,value,checkmatch)
         if result == False:
             return device.target_response'''
-    checkitem = "NAT_dhcp"
-    result = device_check_info(logger, device, checkitem,"show dhcp-server lease", "10.1.4.153")
-    if result == False:
-            return device.target_response
+    checkresult = device.device_send_command_match("show dhcp-server lease", 5, "10.1.4.153")
+    if checkresult == False:
+        return device.target_response
+    return checkresult
     sys.exit(0)
-    return result
+    return checkresult
 
 
 def DNAT_Server_classifier(device):
