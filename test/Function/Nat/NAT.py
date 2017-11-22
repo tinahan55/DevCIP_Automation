@@ -287,13 +287,13 @@ def DNAT_Server_dhcp(device):
     checkcommandlist = ["show dhcp-server lease"]
 
     checkitemlist = ["%s"%(pool_start_ip)]
-
+    device.device_send_command("update terminal paging disable", 10)
     logger.info("[%s]Starting"%(checkitem))
     for index, value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
         result = device_check_info(logger,device,checkitem,value,checkmatch)
         if result == False:
-            return result
+            return device.target_response
             sys.exit(0)
     return result
 
