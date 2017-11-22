@@ -280,7 +280,8 @@ def DNAT_Server_dhcp(device):
 
 
     device.device_set_configs(configlist)
-
+    logger.info("[DNAT] Sleep 60s ...")
+    time.sleep(60)
     #add verify command
     checkitem = "NAT_dhcp"
     checkcommandlist = ["show dhcp-server lease"]
@@ -293,6 +294,7 @@ def DNAT_Server_dhcp(device):
         result = device_check_info(logger,device,checkitem,value,checkmatch)
         if result == False:
             return result
+            sys.exit(0)
     return result
 
 
