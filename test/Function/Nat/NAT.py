@@ -283,7 +283,7 @@ def DNAT_Server_dhcp(device):
     #logger.info("[DNAT] Sleep 60s ...")
     #time.sleep(60)
     #add verify command
-    checkitem = "NAT_dhcp"
+    '''checkitem = "NAT_dhcp"
     checkcommandlist1 = ["show dhcp-server lease"]
 
     checkitemlist = ["10.1.4.153"]
@@ -293,8 +293,12 @@ def DNAT_Server_dhcp(device):
         checkmatch = checkitemlist[index]
         result = device_check_info(logger,device,checkitem,value,checkmatch)
         if result == False:
+            return device.target_response'''
+    checkitem = "NAT_dhcp"
+    result = device_check_info(logger, device, checkitem,"show dhcp-server lease", "10.1.4.153")
+    if result == False:
             return device.target_response
-            sys.exit(0)
+    sys.exit(0)
     return result
 
 
@@ -487,7 +491,7 @@ if __name__ == '__main__':
         server_device.device_no_config()
         logger.info("[DNAT]Server set the configuration ...")
         set_result =DNAT_Server_set_vlan_port(server_device)
-        if set_result == True : set_result =DNAT_Server_app_engine_setup(server_device)
+        #if set_result == True : set_result =DNAT_Server_app_engine_setup(server_device)
         if set_result == True : set_result =DNAT_Server_dhcp(server_device)
         if set_result == True : set_result =DNAT_Server_classifier(server_device)
         if set_result == True : set_result =DNAT_Server(server_device)
