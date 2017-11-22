@@ -60,8 +60,8 @@ def device_check_info(logger, device, checkitem, checkcommand, checkmatch):
     logger.info("%s check %s result: %s" % (title, checkmatch, checkresult))
     if checkresult == False:
         logger.error("%s check %s error: %s" % (title, checkmatch, device.target_response))
-        current_config = device.device_send_command("show running-configuration")
-        logger.error("current config: %s" % current_config)
+        #current_config = device.device_send_command("show running-configuration")
+        #logger.error("current config: %s" % current_config)
 
     return checkresult
 
