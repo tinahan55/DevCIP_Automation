@@ -280,16 +280,16 @@ def DNAT_Server_dhcp(device):
 
 
     device.device_set_configs(configlist)
-    logger.info("[DNAT] Sleep 60s ...")
-    time.sleep(60)
+    #logger.info("[DNAT] Sleep 60s ...")
+    #time.sleep(60)
     #add verify command
     checkitem = "NAT_dhcp"
-    checkcommandlist = ["show dhcp-server lease"]
+    checkcommandlist1 = ["show dhcp-server lease"]
 
-    checkitemlist = ["%s"%(pool_start_ip)]
-    device.device_send_command("update terminal paging disable", 10)
+    checkitemlist = ["10.1.4.153"]
+    #device.device_send_command("update terminal paging disable", 10)
     logger.info("[%s]Starting"%(checkitem))
-    for index, value in enumerate(checkcommandlist):
+    for index, value in enumerate(checkcommandlist1):
         checkmatch = checkitemlist[index]
         result = device_check_info(logger,device,checkitem,value,checkmatch)
         if result == False:
@@ -434,7 +434,7 @@ if __name__ == '__main__':
 
     #SNAT client set configuration
     if set_result == True :
-        client_device = Device_Tool(client_ip, client_port, connecttype, client_login_user, client_login_password, "NAT_test")
+        '''client_device = Device_Tool(client_ip, client_port, connecttype, client_login_user, client_login_password, "NAT_test")
         if client_device.target:
             client_device.device_send_command("update terminal paging disable",10)
             client_device.device_get_version()
@@ -479,7 +479,7 @@ if __name__ == '__main__':
         if matchresult ==True :
             logger.info("[SNAT] test by maintenance successful!!")
         else:
-            logger.info("[SNAT] test by maintenance  fail!!")
+            logger.info("[SNAT] test by maintenance  fail!!")'''
 
 
         #Dnat client set configuration
