@@ -227,7 +227,8 @@ def DNAT_Server_app_engine_setup(device):
 
     interface = Interface("app-engine")
     configlist.extend(interface.get_port_interface(port_index,port_type,vlan_index,vlan_tagged,port_tagged))
-
+    if device.device_type =="lms":
+        configlist.append("config switch app-engine %s port 0 default vlan %s" % (port_index, vlan_index))
     device.device_set_configs(configlist)
 
 
@@ -386,6 +387,7 @@ if __name__ == '__main__':
         login_user = client_Info.split("_")[3]
         login_password = client_Info.split("_")[4]
 
+
     #SNAT Server set configuration
     logger.info("SNAT and DNAT Testing")
     server_device = Device_Tool(server_ip, server_port, connecttype, server_login_user, server_login_password, "NAT_test")
@@ -478,14 +480,14 @@ if __name__ == '__main__':
         if set_result == True : set_result =DNAT_Server_classifier(server_device)
         if set_result == True : set_result =DNAT_Server(server_device)
         if set_result == True : set_result =Server_set_route_table(server_device)
-        if set_result == True :
+        if True:#set_result == True :
             time.sleep(60)
             #DNAT ssh testing by port
             logger.info("[DNAT]ssh login to test ...")
             dnat_device = Device_Tool(server_maintenance_ip, 2222, "ssh", "root", "admin", "NAT_test")
             #dnat_device = Device_Tool(server_maintenance_ip, 2222, "ssh", "root", "Lilee1234", "NAT_test")
             if dnat_device.target:
-                matchresult = dnat_device.device_send_command_match("ifconfig -a",20,"inet 10.1.4.153")
+                matchresult = dnat_device.device_send_command_match("ifconfig -a",20,"10.1.4.153")
                 if matchresult ==True :
                     logger.info("DNAT test by maintenance successful!!")
                 else:
