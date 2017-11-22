@@ -402,6 +402,18 @@ if __name__ == '__main__':
     #SNAT Server set configuration
     logger.info("SNAT and DNAT Testing")
     server_device = Device_Tool(server_ip, server_port, connecttype, server_login_user, server_login_password, "NAT_test")
+    checkitem = "NAT_dhcp"
+    checkcommandlist = ["show dhcp-server lease"]
+
+    checkitemlist = ["10.1.4.153" ]
+    server_device.device_send_command("update terminal paging disable", 10)
+    logger.info("[%s]Starting" % (checkitem))
+    for index, value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        result = device_check_info(logger, server_device, checkitem, value, checkmatch)
+        if result == False:
+            #return server_device.target_response
+            sys.exit(0)
     if server_device.target:
         server_device.device_send_command("update terminal paging disable",10)
         server_device.device_get_version()
