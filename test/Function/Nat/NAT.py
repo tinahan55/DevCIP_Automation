@@ -412,8 +412,8 @@ if __name__ == '__main__':
         checkmatch = checkitemlist[index]
         result = device_check_info(logger, server_device, checkitem, value, checkmatch)
         if result == False:
-            #return server_device.target_response
-            sys.exit(0)
+            print server_device.target_response
+    sys.exit(0)
     if server_device.target:
         server_device.device_send_command("update terminal paging disable",10)
         server_device.device_get_version()
