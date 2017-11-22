@@ -4,7 +4,7 @@ from lib.Configuration import *
 import os
 from time import gmtime, strftime
 from lib.SSHConsole import *
-
+networktool = Network()
 
 
 #def NAT_port_setup(include port and app-engine)
@@ -33,6 +33,15 @@ def get_client_port_index(vlan_index):
             port_index = "2/2"
     return port_index
 
+def check_booting(hostip,check_cycle):
+    k = 0
+    while k < check_cycle:
+        if networktool.Host_Ping(hostip,35):
+            break
+        else:
+            time.sleep(1)
+        k+=1
+    return k
 
 def get_appengine_port():
         port = "0"
@@ -480,7 +489,8 @@ if __name__ == '__main__':
         if set_result == True : set_result =DNAT_Server_classifier(server_device)
         if set_result == True : set_result =DNAT_Server(server_device)
         if set_result == True : set_result =Server_set_route_table(server_device)
-        if True:#set_result == True :
+        if set_result == True :
+            logger.info("[DNAT] Sleep 60s ...")
             time.sleep(60)
             #DNAT ssh testing by port
             logger.info("[DNAT]ssh login to test ...")
