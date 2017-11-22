@@ -406,7 +406,11 @@ if __name__ == '__main__':
     #SNAT Server set configuration
     logger.info("SNAT and DNAT Testing")
     server_device = Device_Tool(server_ip, server_port, connecttype, server_login_user, server_login_password, "NAT_test")
-
+    checkresult = server_device.device_send_command_match("show dhcp-server lease", 5, "10.1.4.153")
+    #if checkresult == False:
+    print server_device.target_response
+    #return checkresult
+    sys.exit(0)
     if server_device.target:
         server_device.device_send_command("update terminal paging disable",10)
         server_device.device_get_version()
@@ -438,7 +442,7 @@ if __name__ == '__main__':
 
     #SNAT client set configuration
     if set_result == True :
-        '''client_device = Device_Tool(client_ip, client_port, connecttype, client_login_user, client_login_password, "NAT_test")
+        client_device = Device_Tool(client_ip, client_port, connecttype, client_login_user, client_login_password, "NAT_test")
         if client_device.target:
             client_device.device_send_command("update terminal paging disable",10)
             client_device.device_get_version()
@@ -483,7 +487,7 @@ if __name__ == '__main__':
         if matchresult ==True :
             logger.info("[SNAT] test by maintenance successful!!")
         else:
-            logger.info("[SNAT] test by maintenance  fail!!")'''
+            logger.info("[SNAT] test by maintenance  fail!!")
 
 
         #Dnat client set configuration
