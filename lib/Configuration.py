@@ -8,6 +8,12 @@ class Profile(object):
         commandlist.append("config cellular-profile \"%s\" access-point-name \"%s\""%(profile_name,access_name))
         return commandlist
 
+    def get_sim_profile(self,profile_name,apn_name):
+        commandlist = list()
+        commandlist.append("create sim-profile \"%s\""%(profile_name))
+        commandlist.append("config sim-profile \"%s\" apn \"%s\""%(profile_name,apn_name))
+        return commandlist
+
     def get_wifi_profile(self,profile_name,ssid,key_type,wpa_version,wpa_key="",auth_type="",auth_eap_type=""
                          ,eap_username="",eap_key=""):
         commandlist = list()
@@ -35,6 +41,14 @@ class Interface(object):
         commandlist.append("config interface dialer %s profile \"%s\""%(dialer_index,profile_name))
         commandlist.append("config interface dialer %s line cellular %s"%(dialer_index,cellular_index))
         commandlist.append("config interface dialer %s enable"%(dialer_index))
+        return commandlist
+
+    def get_cellular_interface(self,profile_name,cellular_index,slot_index):
+        commandlist = list()
+        #commandlist.append("config add interface dialer %s"%(dialer_index))
+        commandlist.append("config interface cellular %s profile \"%s\" sim-slot-%d"%(cellular_index,profile_name,slot_index))
+        commandlist.append("config interface cellular %s active-sim-slot slot-%d "%(cellular_index,slot_index))
+        commandlist.append("config interface cellular %s enable"%(cellular_index))
         return commandlist
 
     def get_wifi_interface(self,wifi_index,profile_name,wifi_mode,ip_mode,wifi_operating_mode,ipaddress,netmask):
