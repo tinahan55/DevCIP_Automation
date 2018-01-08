@@ -69,7 +69,7 @@ class Device_Tool(object):
         else:
             self.device_set_lilee_mode = False
             return 'lilee'
-        print ("command mode is %s" % command_mode)
+        #print ("command mode is %s" % command_mode)
         return command_mode
 
     def _escape_ansi(self,line):
