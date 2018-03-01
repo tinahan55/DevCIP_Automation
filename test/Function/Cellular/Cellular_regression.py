@@ -135,9 +135,9 @@ Cellular_Simlot_Switch(device):
             command2= 'show sim-management current-status'
             #command2_match ="%s&& dialer %s" %(Iccid01,cellular_index)
             result2 = server_device.device_send_command_match(command2, 10,"%s(.*)cellular 0(.*)1" % (Iccid01))
-            print result2
             if result2==False:
                 logger.info("[Check_Sim_Iccid] Failed...")
+                print device.target_response
             else:
                 sub_match3 = re.findall(r"%s\s+cellular\s(\d)"%(Iccid01), device.target_response)
                 if sub_match3[0]==cellular_index:
