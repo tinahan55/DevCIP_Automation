@@ -10,7 +10,7 @@ class Profile(object):
 
     def get_sim_profile(self,profile_name,apn_name):
         commandlist = list()
-        commandlist.append("create sim-profile \"%s\""%(profile_name))
+        commandlist.append("create sim-profile manual \"%s\""%(profile_name))
         commandlist.append("config sim-profile \"%s\" apn \"%s\""%(profile_name,apn_name))
         return commandlist
 
