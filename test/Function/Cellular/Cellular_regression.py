@@ -83,7 +83,7 @@ def Cellular_RRC_Check(device):
     logger.info("[DUT] Check Cellular RRC state is %s"%(matchresult))
     return matchresult
 
-Cellular_Simlot_Switch(device):
+def Cellular_Simlot_Switch(device):
     configlist = list()
     # profile and dialer
     profile_name = "Auto2"
