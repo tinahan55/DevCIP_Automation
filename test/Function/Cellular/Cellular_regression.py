@@ -198,6 +198,7 @@ if __name__ == '__main__':
     server_maintenance_ip = "10.2.66.65"
     server_login_user ="admin"
     server_login_password ="admin"
+    public_ping_ip = "8.8.8.8"
     if len(sys.argv) >1:
         #connect_type = sys.argv[1]
         Server_Info = sys.argv[1] #telnet_10.2.66.50_2040_10.2.66.65_admin_admin
