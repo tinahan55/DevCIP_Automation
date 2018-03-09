@@ -57,7 +57,7 @@ class Device_Tool(object):
     def __device_check_mode(self,command):
         if self.device_set_lilee_mode == False:
             command_mode = 'shell'
-            bashcommandlist = ["ifconfig","ping","ip route"] #Add "ip" for ip table modifying
+            bashcommandlist = ["ifconfig","ping","ip route","time"] #Add "ip" for ip table modifying
             filter_result =  list(lileecommand for lileecommand in bashcommandlist if lileecommand in command)
             if len(filter_result) >0:
                 command_mode = "shell"
