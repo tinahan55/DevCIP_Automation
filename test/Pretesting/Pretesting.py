@@ -60,73 +60,51 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
 
 def Pretesting_Cellular(device):
     configlist = list()
-    profile0_name ="cht"
-    access0_name = "internet"
-    dialer0_index = 0
-    cellular0_index = 0
-    dialer0_carrier = "Chunghwa"
-    cellular0_usb_index="usb1"
-    cellular_result=""
+    # profile and dialer
+    profile_name = "Auto"
+    access_name = "internet"
+    apn_name1 = "internet"
+    apn_name2 = "wrong"
+    simslot_index = 0
+    result = False
+    logger.info("[DUT] Enable interface cellular")
+    profile = Profile("Profile")
+    configlist.extend(profile.get_sim_profile(profile_name, apn_name1))
+    interface_dialer = Interface("server_dialer")
+    configlist.extend(interface_dialer.get_cellular_interface(profile_name, cellular_index, simslot_index))
 
-    profile = Profile("Celluar")
-    configlist.extend(profile.get_cellular_profile(profile0_name,access0_name))
-    #configlist.extend(profile.get_cellular_profile(profile1_name,access1_name))
-
-    interface = Interface("Celluar")
-    configlist.extend(interface.get_dialer_interface(dialer0_index,profile0_name,cellular0_index))
-    #configlist.extend(interface.get_dialer_interface(dialer1_index,profile1_name,cellular1_index))
     device.device_set_configs(configlist)
-    time.sleep(30)
 
-    checkitem ="Pretesting_Cellular"
-    checkcommandlist = ["show interface all","show interface dialer %s detail"%(dialer0_index),"show sim-management current-status"
-        ,"ping -I %s -c5 8.8.8.8"%(cellular0_usb_index),"show platform led"]
-
-    checkitemlist = ["dialer %s (.*) up"%(dialer0_index),"Operational : up | MTU : 1500","dialer %s (.*)"%(dialer0_index),"64 bytes from 8.8.8.8: icmp_seq=(.*)","LTE%s (.*) green"%(cellular0_index)]
-
-    logger.info("[%s]Starting"%(checkitem))
-    for index,value in enumerate(checkcommandlist):
+    time.sleep(10)
+    checkitem = "Set_cellular"
+    checkcommandlist = ["show interface cellular %s detail" % (cellular_index), "show interface all"]
+    checkitemlist = ["Radio Access Technology : LTE", "cellular %s(.*)up" % (cellular_index)]
+    logger.info("[%s]Starting" % (checkitem))
+    for index, value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
-        cellular_result = device_check_info(logger,device,checkitem,value,checkmatch)
-        if cellular_result!=True:
-            print device.target_response
-            #print cellular_result
-            break
-    if cellular_result:
-        logger.info("[Pretesting_Cellular] Successfully!!!")
-        return "PASS"
-    else:
-        logger.info("[Pretesting_Cellular] Test  fail!!")
-        return "FAIL"
+        cellular_result = device_check_info(logger, device, checkitem, value, checkmatch)
+        time.sleep(10)
+        if cellular_result == False:
+            # print device.target_response
+            logger.info("[Pretesting_Cellular] Test  fail!!")
+            return "FAIL"
+        else:
+            logger.info("[Pretesting_Cellular] Successfully!!!")
+            return "PASS"
 
 def Dialer_Iccid_info(device):
-    logger.info("[Dialer_Iccid-info] Testing start...")
-    server_command = "show sim-management current-status"
-    server_command_match = "%s" % (Iccid00)
-    result1 = device.device_send_command_match(server_command, 20, server_command_match)
+    logger.info("[Cellular_Iccid-info] Testing start...")
+    server_command = "show interface cellular %s detail" % (
+        cellular_index)  # "show sim-management current-status" #show interface cellular 0 detail
+    server_command_match = "ICCID : %s" % (Iccid00)
+    result0 = device.device_send_command_match(server_command, 20, server_command_match)
     # matchresult = server_device.device_send_command_match(server_command, 20, server_command_match)
-    if result1 == False:
-        logger.info("[Dialer_Iccid-info] test  fail!!")
+    if result0 == False:
+        logger.info("[Cellular_Iccid-info] test  fail!!")
         return "FAIL"
     else:
-        logger.info("[Dialer_Iccid-info] Successfully!!!")
+        logger.info("[Cellular_Iccid-info] Successfully!!!")
         return "PASS"
-    logger.info("[Dialer_Iccid-info] is %s..."% (result1))
-
-def Dialer_Info(device):
-    logger.info("[Dialer_Info] Testing start...")
-    server_command = "show line cellular all"
-    server_command_match = "cellular     %s            Generic              LTE" %(cellular_index)
-    result2 = device.device_send_command_match(server_command, 10, server_command_match)
-    # matchresult = server_device.device_send_command_match(server_command, 20, server_command_match)
-
-    if result2 == False:
-        logger.info("[Dialer_Info] test  fail!!")
-        return "FAIL"
-    else:
-        logger.info("[Dialer_Info] Successfully!!!")
-        return "PASS"
-    logger.info("[Dialer_Info] is %s..." % (result2))
 
 def OS_1410(device):
     wlan0_mac_address = "04:f0:21:25:46:7b"
@@ -323,7 +301,7 @@ if __name__ == '__main__':
         username = device_info[3]
         password = device_info[4]
     else:
-        device_ip = "10.2.66.64"
+        device_ip = "10.2.66.65"
         device_port = 22
         device_connect_type = "ssh"
         username = "admin"
@@ -365,10 +343,10 @@ if __name__ == '__main__':
                                                    testrail_buildversion, iccid_result, comment, True)
         logger.info("[Update_Pretesting_Dialer_ICCID]update_test_result : %s" % (updateresult))
 
-        info_result = Dialer_Info(device)
+        '''info_result = Dialer_Info(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "Cellular", device_type, 15719,
                                                    testrail_buildversion, info_result, comment, True)
-        logger.info("[Update_Pretesting_Dialer_Info]update_test_result : %s" % (updateresult))
+        logger.info("[Update_Pretesting_Dialer_Info]update_test_result : %s" % (updateresult))'''
 
         poe_result = Pretesting_Poe(device)
         updateresult = testrail.update_test_result(project_name, test_plan, "PoE", device_type, 6965,
@@ -393,7 +371,7 @@ if __name__ == '__main__':
                                                    testrail_buildversion, cli_result, comment, True)
         logger.info("[Update_Pretesting_CLI] is %s..." % (updateresult))
 
-        if device.device_type == "sts":
+        '''if device.device_type == "sts":
             wifi_result = Pretesting_WiFi(device)
             updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 6889,
                                                        testrail_buildversion, wifi_result, comment, True)
@@ -401,5 +379,7 @@ if __name__ == '__main__':
                                                        testrail_buildversion, wifi_result, comment, True)
             updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 9227,
                                                        testrail_buildversion, wifi_result, comment, True)
-            logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))
+            logger.info("[Update_Pretesting_WiFi] is %s..." % (updateresult))'''
+        #sqamail = sqa_mail()
+        #sqamail.send_mail("lance.chien@lileesystems.com", "Celluar Test %s" % (set_result), u"%s" % (set_result))
         
