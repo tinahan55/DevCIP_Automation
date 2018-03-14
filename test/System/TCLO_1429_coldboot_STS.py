@@ -181,7 +181,7 @@ def OS_1932_dd(device,limit):
     logger.info("[%s]Starting" % (checkitem))
     device.device_send_command("rm /data/sqa*")
     if dd_limit < 40:
-        dd_cli = ("time fsck -c -C0 -v -f /dev/sda1")#"dd if=/dev/urandom of=/data/sqa%d.img bs=512k count=2048") % (dd_limit)
+        dd_cli = ("dd if=/dev/urandom of=/data/sqa%d.img bs=512k count=2048") % (dd_limit)
         logger.info("[App-Engine_DD] Start!")
         device.device_send_command(dd_cli)
         time.sleep(25)
@@ -216,10 +216,19 @@ def OS_1932_root(device):
         device.device_send_command("^c")
         return result0
 
+def TCLO_1429(device):
+    dd_cli = ("time fsck -c -C0 -v -f /dev/sda1")
+    logger.info("[System Fsck] Start!")
+    device.device_send_command(dd_cli,60)
+    logger.info(device.target_response)
+    if "bash-4.2#" not in device.target_response:
+        print device.target_response
+        return False
+
 
 if __name__ == '__main__':
-    logfilename = "OS1932%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
-    logger = set_log(logfilename,"OS1932")
+    logfilename = "TCLO1429%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
+    logger = set_log(logfilename,"TCLO1429")
     ip = "10.2.8.251"#"10.2.8.252"
     port = 22
     mode ="ssh"
@@ -241,7 +250,7 @@ if __name__ == '__main__':
     project_name = "LileeOS"
     test_plan = "LileeOS_Weekly_Pretest"
     #test_run = "PreTesting"
-    testrail = TestRailAPI(logname="OS1932")
+    testrail = TestRailAPI(logname="TCLO1429")
     comment = "Auto result upload by SQA"
 
     if len(sys.argv)>3:
@@ -269,13 +278,7 @@ if __name__ == '__main__':
         cycle_times = int(condition_info[0])
 
     try:
-        '''for k in range(0, 20):
-            dnat_device = Device_Tool(ip, 2222, "ssh", "sts", "Lilee1234", "Pretesting")
-            if dnat_device:
-                if OS_1932_root(dnat_device):
-                    OS_1932_dd(dnat_device, 10)'''
-            #sys.exit(0)
-        device =Device_Tool(ip,port,mode,username,password,"OS1932")
+        device =Device_Tool(ip,port,mode,username,password,"TCLO1429")
         powerCycle = powerCycle()
         pass_count = 0
 
@@ -298,53 +301,26 @@ if __name__ == '__main__':
                     logger.info("[%s][power_cycle_sleep]wait %s seconds"%(k+1,count))
                     if count < power_cycle_sleep:
                         #time.sleep(power_cycle_sleep)
-                        device =Device_Tool(ip,port,mode,username,password,"OS1932")
+                        device =Device_Tool(ip,port,mode,username,password,"TCLO1429")
                         if device:
                             print k
-                            if (k+10)/10==0:
+                            if (k+10)%10==0:
                                 logger.info("[sleep]wait 900 seconds")
                                 time.sleep(900)
                             else:
                                 logger.info("[sleep]wait 100 seconds")
                                 time.sleep(100)
-                            #dnat_device = Device_Tool(ip, 2222, "ssh", "sts", "Lilee1234", "OS1932")
-                            '''if dnat_device:
+                            ''''dnat_device = Device_Tool(ip, 2222, "ssh", "sts", "Lilee1234", "OS1932")
+                            if dnat_device:
                                 while True:
                                     if OS_1932_root(dnat_device):
                                         break;
                                 OS_1932_dd(dnat_device,k)'''
-                            dd_cli = ("time fsck -c -C0 -v -f /dev/sda1")  # "dd if=/dev/urandom of=/data/sqa%d.img bs=512k count=2048") % (dd_limit)
-                            logger.info("[System Fsck] Start!")
-                            device.device_send_command(dd_cli,60)
-                            #time.sleep(60)
-                            logger.info(device.target_response)
-                            if "bash-4.2#" not in device.target_response:
-                                print device.target_response
+                            result = TCLO_1429(device)
+                            if result == False:
+                                sqamail = sqa_mail()
+                                sqamail.send_mail("lance.chien@lileesystems.com", "R4-STS  STOP", u"TCLO-1429"u" Failed")
                                 sys.exit(0)
-                            #if OS_1932_result=="FAIL":
-                                #sqamail = sqa_mail()
-                                #sqamail.send_mail("lance.chien@lileesystems.com", "R4-STS  STOP", u"OS-1935"u" Failed")
-                            #sys.exit(0)
-                            '''stress_switch_init = OS_1643(device)
-                            stress_ssd_init = OS_1623(device)
-                            stress_wifi_init = OS_1410(device)
-                            if stress_ssd_init =="FAIL" or stress_switch_init == "FAIL" or stress_wifi_init  == "FAIL":
-                                updateresult = testrail.update_test_result(project_name, test_plan, "Systems",device_type,12039,testrail_buildversion, stress_switch_init,comment,True)
-                                updateresult = testrail.update_test_result(project_name, test_plan, "Systems",device_type,12037,testrail_buildversion, stress_ssd_init,comment,True)
-                                updateresult = testrail.update_test_result(project_name, test_plan, "Systems",device_type,12541,testrail_buildversion, stress_ssd_init,comment,True)
-                                updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type,12272, testrail_buildversion, stress_wifi_init,comment, True)
-                                logger.info("[System_Stress_coldboot]update_test_result : %s" % (updateresult))
-                                sys.exit(0)
-            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12039,testrail_buildversion, stress_switch_init, comment, True)
-            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12037,testrail_buildversion, stress_ssd_init, comment, True)
-            updateresult = testrail.update_test_result(project_name, test_plan, "Systems", device_type, 12541,testrail_buildversion, stress_ssd_init, comment, True)
-            updateresult = testrail.update_test_result(project_name, test_plan, "WiFi", device_type, 12272,testrail_buildversion, stress_wifi_init, comment, True)
-            logger.info("[System_Stress_coldboot]update_test_result : %s" % (updateresult))'''
-
-
-
-
-
 
     except Exception,ex:
         logging.error("[coolboot]exception fail:%s "%(str(ex)))
